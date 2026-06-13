@@ -24,8 +24,12 @@ confirming the hypothesis for both consumers from a single, unchanged memory. An
 ablation that injects camera-pose drift maps the boundary: at moderate drift the
 result holds, but at heavy drift the precise world-model consumer collapses to
 the baseline floor while the coarser VLA consumer survives. The advantage is
-therefore real but *localization-quality-dependent*. We release the layer as an
-installable library with a CLI that reproduces every number here.
+therefore real but *localization-quality-dependent*. We then **replicate the
+result on real egocentric data** (ARKitScenes: real iPhone/iPad scans, real ARKit
+VIO poses, real 3D object layouts): the *unchanged* library reaches 0.70–1.00
+world-model and 1.00 VLA recall versus ≤ 0.03 for both baselines across two seeds,
+confirming the claim outside the simulator. We release the layer as an installable
+library with a CLI that reproduces every number here.
 
 ## 1. Introduction
 
@@ -224,14 +228,61 @@ rejected for the world-model consumer**. The VLA consumer survives the gate
 (0.519 vs no-memory ≈ 0.265 and naive ≈ 0.324). Direction recall is intrinsically
 more drift-tolerant than absolute-position recall.
 
-## 7. Limitations
+## 7. Real-data validation (ARKitScenes)
 
-- **Synthetic substrate.** The testbed is a geometric egomotion simulator, not
-  real egocentric human video. It has exact ground truth and **oracle data
-  association** (object ids are given); real detection and tracking are not
-  tested. Validating on a real egocentric clip (e.g. a LeRobot-v3 egocentric
-  sample, with real detections, monocular depth, and estimated pose) is the
-  primary next step; GPU and data infrastructure are available for it.
+The §5–§6 results are synthetic. We test the same claim on **real egocentric
+data** by reusing the *unchanged* shipped library on **ARKitScenes 3dod** — real
+iPhone/iPad indoor scans with real ARKit visual-inertial-odometry camera poses
+(`lowres_wide.traj`) and human-annotated 3D object boxes. Only a data loader is
+new; the memory arms and read-heads are imported verbatim from `lib/egomem`.
+
+**Setup.** 14 Validation scenes; per scene we use the annotated 3D box centroids
+as objects (positions; oracle identity), the ARKit poses as camera trajectory, and
+per-frame intrinsics for visibility by projection. We subsample every 20th frame
+and run the identical out-of-view recall protocol (0.5 m / 30° tolerances, two
+head seeds, scene-level train/test split). A **projection validation gate** runs
+first: object box centroids (OBB units resolved to metres — they are stored in
+centimetres in the same world frame as the trajectory, verified by containment in
+the camera-position extent, 18/18 for the inspected scene) must project in-image
+at positive depth with a sane partial-visibility pattern. The gate passed on
+**14/14 scenes** before any recall number was computed.
+
+**Table 3. Real-data out-of-view recall (ARKitScenes, 14 Validation scenes).**
+Rows: `RESULTS.md` `exp_id = 2026-06-13_arkit-oov (H2)`.
+
+| Consumer | Arm | seed 0 | seed 1 |
+|---|---|---|---|
+| World-model (pos @0.5 m) | no-memory | 0.000 | 0.032 |
+| World-model | naive | 0.030 | 0.032 |
+| World-model | **EgoMem** | **0.697** | **1.000** |
+| VLA (dir @30°) | no-memory | 0.000 | 0.032 |
+| VLA | naive | 0.030 | 0.032 |
+| VLA | **EgoMem** | **1.000** | **1.000** |
+
+EgoMem beats both baselines by far more than 20 pp for both consumers on both
+seeds: **H2 is CONFIRMED**, replicating the synthetic finding on real sensing.
+EgoMem's mean errors are 0.17–0.38 m (world-model) and 4.7–5.2° (VLA). Consistent
+with §6, the precise world-model consumer carries the extra variance from real
+pose noise (0.697 at seed 0 vs 1.000 at seed 1), while the direction consumer is
+saturated — real ARKit VIO sits on the "good localization" side of the §6 drift
+boundary. That the *unchanged* shipped library produces this on real data is also
+a working-software result, not only a scientific one.
+
+## 8. Limitations
+
+- **Substrate.** The core §5–§6 study is a geometric egomotion simulator with
+  exact ground truth. §7 addresses the realism gap with real ARKitScenes data
+  (real VIO poses, real layouts), but two gaps remain in §7 too: it uses
+  **oracle data association** (object id + 3D box from annotations) — no real 2D
+  detector or monocular depth yet — and the evaluation is **modest in size**
+  (14 scenes, ≈ 31–33 test queries/seed); the effect is large and consistent but
+  more scenes (GPU/bulk download is available) would tighten the estimate. A
+  fully real perception front-end is the clear next step.
+- **Projection convention (§7 impl detail).** The real-data loader auto-selects
+  the camera projection convention per scene by maximising in-image visibility;
+  scenes picked differing forward/vertical signs. This only affects the
+  visible/out-of-view *labeling* and is applied identically to all three arms, so
+  the comparison is fair, but a single principled convention would be cleaner.
 - **Consumers are minimal.** The read-heads are tiny MLPs, close to linear
   read-outs. The claim we test is about *information availability in a neutral
   memory*, not consumer sophistication; near-ceiling EgoMem numbers reflect that
@@ -244,7 +295,7 @@ more drift-tolerant than absolute-position recall.
 - **Scope.** A single task (out-of-view recall) and one substrate. Other
   long-horizon abilities (task-stage memory, affordances) are untested.
 
-## 8. Conclusion
+## 9. Conclusion
 
 A model-agnostic memory layer for robotics, fed by egocentric video, is feasible
 and useful: a single non-parametric `write/query` store improves both a
@@ -252,10 +303,14 @@ world-model predictor and a VLA policy on out-of-view recall, far above no-memor
 and naive baselines, stably across seeds — with the transfer between consumers
 demonstrated rather than assumed. The benefit is bounded by localization quality:
 precise position recall is pose-sensitive and fails under heavy drift, while
-coarse direction recall is robust. We release EgoMem as an installable library and
-CLI that reproduces every number reported here, as the buyer-side, neutral memory
-the literature has not yet offered. The clear next step is to replace the
-synthetic substrate with real egocentric human video.
+coarse direction recall is robust. The finding **replicates on
+real egocentric data** (§7, ARKitScenes): the unchanged library reaches 0.70–1.00
+world-model and 1.00 VLA recall versus ≤ 0.03 baselines, with real ARKit VIO poses
+landing on the good-localization side of the §6 boundary. We release EgoMem as an
+installable library and CLI that reproduces every number reported here, as the
+buyer-side, neutral memory the literature has not yet offered. The clear next step
+is a fully real perception front-end (real detector + monocular depth, at larger
+scale) in place of the oracle object associations used so far.
 
 ## References
 

@@ -24,6 +24,11 @@ policy — beats a no-memory baseline and a naive raw-frame buffer, across 3 see
 hypothesis is **confirmed for both consumers** from one unchanged memory — the
 cross-paradigm transfer is demonstrated, not assumed.
 
+**Replicated on real data.** The *unchanged* library reproduces this on real
+egocentric scans (ARKitScenes: real ARKit VIO poses + 3D layouts, 14 scenes):
+EgoMem **0.70–1.00** world-model and **1.00** VLA recall vs **≤ 0.03** for both
+baselines, across 2 seeds (projection gate passed 14/14). See `paper/paper.md` §7.
+
 **Honest caveat (the boundary):** the advantage is *localization-quality
 dependent*. Under injected camera-pose drift the precise world-model consumer
 degrades and, at heavy drift, **collapses to the baseline** (H1 rejected for that
@@ -40,6 +45,11 @@ egomem demo                   # one-command demo: small synthetic run, prints th
 egomem sim --seed 0           # full benchmark — reproduces the seed-0 numbers in RESULTS.md
 egomem sim --seed 0 --pose-drift 0.15   # the heavy-drift ablation (H1 rejected for world-model)
 ```
+
+**Real-data run (ARKitScenes).** The loader at
+`experiments/2026-06-13_arkit-oov/arkit_loader.py` downloads scene zips from the
+public ARKitScenes CDN and drives the unchanged library; see `research/design_h2.md`
+for the protocol and `experiments/2026-06-13_arkit-oov/config.json` for the scene ids.
 
 `egomem sim --seed 0` prints no-memory 0.016 / 0.280, naive 0.027 / 0.371, EgoMem
 1.000 / 1.000 — identical to the committed experiment

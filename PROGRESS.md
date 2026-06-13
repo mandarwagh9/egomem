@@ -74,7 +74,11 @@ library. New falsifiable claim: `research/hypothesis_h2.md` (H2 = same ≥20 pp 
 ≥naive gate, both consumers, on ARKitScenes 3dod). Design: `research/design_h2.md`.
 Cycle-1 `landscape.md` still covers the field.
 
-**CYCLE 2 CURRENT PHASE = 6 (PAPER/WRITEUP).** Experiment DONE; **H2 CONFIRMED**.
+**CYCLE 2 COMPLETE — H2 CONFIRMED on real data.** Paper §7 (Real-data validation,
+Table 3) + abstract + conclusion + limitations updated; README headline updated.
+Sections 1–9 consistent, zero TODOs. Future work (Cycle 3, not started): real
+perception front-end (2D detector + monocular depth, larger scale) replacing the
+oracle object associations; GCP+GPU available.
 
 ### H2 result (real ARKitScenes, logged 2026-06-14)
 Implemented `experiments/2026-06-13_arkit-oov/arkit_loader.py`, resolved the
@@ -101,13 +105,10 @@ consistent with the Cycle-1 drift boundary. 12 rows in RESULTS.md.
   labeling and is applied identically across all three arms, so the comparison is
   fair — but a single principled convention is cleaner (note as impl detail).
 
-### Next single task — fold H2 into the writeup
-1. Add a "Real-data validation (ARKitScenes)" section to `paper/paper.md` (a Table
-   3 with the H2 numbers, the gate, and the limitations above); update the
-   abstract/conclusion to state real-data confirmation. Every number cites a
-   RESULTS.md row; zero TODOs.
-2. Update top-level `README.md` headline to mention real-data confirmation.
-3. Then mark Cycle 2 COMPLETE.
+### Next (Cycle 3, optional — not started)
+Real perception front-end: run an open-vocab 2D detector + monocular depth on the
+ARKitScenes RGB/depth frames (instead of oracle 3D-box associations), at larger
+scene scale (GCP+GPU). Write it as a new hypothesis (H3) when started.
 
 (Cycle-1 history below.)
 
@@ -189,6 +190,17 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-14 — H2 folded into paper + README; Cycle 2 COMPLETE
+- **Did:** Added paper §7 "Real-data validation (ARKitScenes)" with Table 3 (every
+  cell → a RESULTS row), updated abstract, conclusion, and limitations; renumbered
+  Conclusion→§9; updated README headline + repro note. Verified sections 1–9
+  consistent and zero TODOs.
+- **Finding:** Cycle 2 done — H1 now backed by a real-data replication (H2). Both
+  cycles complete. Optional Cycle 3 (real perception front-end) noted as future
+  work.
+- **Next task:** none in-loop (Cycle 3 optional).
+- **Blocker:** none.
 
 ### 2026-06-14 — H2 CONFIRMED on real ARKitScenes data (Cycle 2 EXPERIMENT)
 - **Did:** Wrote `arkit_loader.py`; empirically resolved the OBB↔trajectory frame
@@ -360,13 +372,17 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ---
 
-STATUS: CYCLE 1 COMPLETE — CYCLE 2 ACTIVE (real-data validation, H2)
+STATUS: CYCLE 1 & 2 COMPLETE
 
-Cycle 1 finished 2026-06-13: EgoMem invented, validated (3-seed defended result
-with a characterized failure boundary), packaged as an installable library + CLI,
-written up in paper/paper.md. Core claim supported with honest scope. Every number
-in RESULTS.md / paper came from a real run logged this loop.
+Cycle 1 (synthetic, 2026-06-13): EgoMem invented, validated (3-seed defended
+result with a characterized pose-drift failure boundary), packaged as an
+installable library + CLI, written up in paper/paper.md.
 
-Cycle 2 opened 2026-06-13: validating the same library on REAL egocentric data
-(ARKitScenes 3dod). See the ACTIVE CYCLE 2 block near the top. Next: implement the
-ARKit loader (pass the projection validation gate), run H2, log results.
+Cycle 2 (real data, 2026-06-14): H2 CONFIRMED on real ARKitScenes 3dod (14 scenes,
+real ARKit VIO poses; projection gate 14/14; egomem 0.70–1.00 vs ≤0.03 baselines,
+both consumers, 2 seeds). The unchanged shipped library works on real egocentric
+data. Paper §7 added. Core claim supported with honest scope on synthetic AND real
+data. Every number in RESULTS.md / paper came from a real run logged this loop.
+
+Optional future (Cycle 3, not started): real perception front-end (detector +
+monocular depth) replacing oracle associations, at larger scale, on GCP+GPU.
