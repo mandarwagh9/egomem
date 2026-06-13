@@ -66,41 +66,68 @@ defended-result writeup. Revisit if compute proves cheaper/dearer than expected.
 
 ---
 
-## CURRENT PHASE = 3 (EXPERIMENT)
+## CURRENT PHASE = 4 (ITERATE)
 
-Phase 2 closed: `research/design.md` committed — neutral API, data contract,
-dataset (synthetic egomotion testbed primary; real-clip = Phase-4 stretch; CPU
-verified: py3.13/numpy/torch-cpu/sklearn), 3 baseline arms (no-memory / naive /
-EgoMem), and the single out-of-view-recall experiment.
+Phase 3 closed: ran `experiments/2026-06-13_oov-recall/run_experiment.py` (seed 0,
+CPU, deterministic). **H1 CONFIRMED for both consumers** — egomem 1.000/1.000 vs
+no-memory 0.016/0.280 and naive 0.027/0.371 (WM succ@0.5m / VLA dir succ@30deg).
+6 rows in RESULTS.md; raw log + `metrics_seed0.json` in the experiment folder.
 
-### Next single task — implement + run the experiment
-Build exactly `design.md` §1–§5 as a single runnable script under
-`experiments/2026-06-13_oov-recall/` (or a small `lib/`-staged module it imports;
-keep it minimal — clean packaging is Phase 5, not now). Concretely:
-1. Synthetic egomotion simulator (rooms, objects, camera trajectory, FOV-based
-   observation with noise) — exact ground truth.
-2. Three memory arms behind the neutral `write/query` API: no-memory, naive
-   (raw-frame buffer, no pose transform), EgoMem (pose-aware world-frame
-   persistent object store).
-3. Two tiny CPU read-heads (world-model = next-pos MLP; VLA = goal-direction
-   MLP), identical arch across arms, trained per arm on train split.
-4. Eval on held-out out-of-view recall queries → per-arm × per-consumer success
-   rate (+ mean error). Fixed seed first; ≥2 seeds is Phase 4.
-5. Write `config.json` + full `stdout.log` + `metrics.json` to the experiment
-   folder; **append ONE row to RESULTS.md** with the real numbers.
-6. Compute the H1 threshold check (EgoMem ≥ no-memory +20 pp AND ≥ naive, BOTH
-   consumers) and record PASS/FAIL — do NOT fabricate; report whatever runs.
+### Analysis of the seed-0 number (why it is what it is)
+- EgoMem near-perfect because its `query` returns the out-of-view object's
+  position re-expressed in the CURRENT camera frame, so the tiny head learns a
+  near-identity readout — i.e. the *information is linearly present*. naive
+  carries the object but in a STALE frame (no pose transform) → ~floor, proving
+  the win comes from pose-aware world-frame integration, not buffering.
+  no-memory has no record → constant-prior floor, proving the task needs memory.
+- Caveats that Phase 4 must stress: (i) one seed only; (ii) clean synthetic
+  geometry + oracle data association (obj_id given) make it *easy* — a real-data
+  or noisier setting could erode the gap. The near-1.0 is honest but fragile.
 
-### Constraints
-- CPU only. Keep N/M/T small enough to finish in minutes (design suggests
-  N≈300, M 6–10, T≈30). Scale DOWN if slow; a tiny real run beats a big imaginary
-  one. NEVER write a number that wasn't produced by an actual run.
-- If something can't run (dep/memory), scale down or mark STATUS: BLOCKED with
-  the exact blocker — do not fake output.
+### Next single task — seed stability (the minimum for a defended result)
+Run seeds 1 and 2 of the SAME config (no design change): 
+`python run_experiment.py --seed 1` and `--seed 2`, tee to `stdout_seed{1,2}.log`.
+Append the per-arm × per-consumer rows to RESULTS.md (real numbers only). Confirm
+H1 holds across all 3 seeds. If it holds, the result is stable → that is the
+Phase 4 EXIT (a defended result), THEN consider one stress variant below.
+
+### After stability — one stress variant (change exactly ONE thing)
+Pick the single most informative knob to find where the effect breaks:
+raise `DET_NOISE` (e.g. 0.05 → 0.25) OR add per-frame pose drift, so EgoMem is no
+longer trivially perfect. Rerun 3 seeds. This probes robustness and gives the
+paper an ablation. Treat a changed number as a NEW set of RESULTS rows (note the
+variant), never an edit of an old row.
+
+### Iteration budget: ≤6 variants (PROGRESS top). Stop iterating when stable
+across ≥2 seeds AND at least one stress variant is characterized, then → Phase 5.
+
+## Resources available (for escalation)
+- **GCP**: gcloud installed + authenticated as `roboticsblack@gmail.com` (active).
+  BlackRobotics project `project-6ee36aac-1137-4fae-b2b`, region `us-central1`.
+  Use for the **real-egocentric-clip stretch** (GPU + real detections/depth/pose,
+  e.g. a LeRobot-v3 egocentric sample) — the natural Phase-4/5 escalation once the
+  synthetic mechanism is defended. Don't spend GPU until the clean case holds.
+- Local: CPU only (torch 2.10 cpu). Synthetic runs finish in seconds.
 
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-13 — Experiment run, H1 confirmed seed 0 (Phase 3 → 4)
+- **Did:** Implemented + ran `experiments/2026-06-13_oov-recall/run_experiment.py`
+  (synthetic egomotion sim, 3 memory arms behind one neutral write/query API, 2
+  tiny CPU read-heads). seed 0, 200 train / 100 test episodes, 450 test recall
+  queries. Captured `stdout_seed0.log` + `metrics_seed0.json`; appended 6 rows to
+  RESULTS.md.
+- **Result (real):** WM pos recall succ@0.5m — egomem **1.000** vs no-mem 0.016,
+  naive 0.027. VLA dir succ@30° — egomem **1.000** vs no-mem 0.280, naive 0.371.
+  H1 threshold (≥no-mem+20pp AND ≥naive, both consumers) → **CONFIRMED**.
+- **Finding:** The neutral, non-parametric memory, written once, serves BOTH a
+  state-predictor and a policy head and beats both baselines — the transfer claim
+  is demonstrated, not assumed. naive≈floor isolates pose-aware integration as
+  the cause. Phase 3 EXIT met → **CURRENT PHASE = 4 (ITERATE)**.
+- **Next task:** seeds 1 & 2 for stability, then one stress variant (see above).
+- **Blocker:** none. Recorded GCP as the real-data escalation resource.
 
 ### 2026-06-13 — Design written (Phase 2 → 3)
 - **Did:** Verified the runtime (py3.13.2, numpy 1.26.4, torch 2.10.0 CPU-only,

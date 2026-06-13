@@ -1,0 +1,43 @@
+{
+  "seed": 0,
+  "config": {
+    "n_train": 200,
+    "n_test": 100,
+    "T_frames": 30,
+    "half_fov_deg": 30.0,
+    "max_range": 6.0,
+    "det_noise": 0.05,
+    "tol_pos_m": 0.5,
+    "tol_ang_deg": 30.0,
+    "threshold_pp": 20
+  },
+  "results": {
+    "no-memory": {
+      "n_train_q": 893,
+      "n_test_q": 450,
+      "wm_success": 0.015555555555555555,
+      "wm_mean_err_m": 3.4407026767730713,
+      "vla_success": 0.28,
+      "vla_mean_err_deg": 63.0689582824707
+    },
+    "naive": {
+      "n_train_q": 893,
+      "n_test_q": 450,
+      "wm_success": 0.02666666666666667,
+      "wm_mean_err_m": 3.240703821182251,
+      "vla_success": 0.3711111111111111,
+      "vla_mean_err_deg": 55.152286529541016
+    },
+    "egomem": {
+      "n_train_q": 893,
+      "n_test_q": 450,
+      "wm_success": 1.0,
+      "wm_mean_err_m": 0.12315545976161957,
+      "vla_success": 1.0,
+      "vla_mean_err_deg": 1.8331239223480225
+    }
+  },
+  "wm_pass": true,
+  "vla_pass": true,
+  "H1": "CONFIRMED"
+}

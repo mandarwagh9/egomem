@@ -1,0 +1,11 @@
+=== EgoMem out-of-view recall | seed=0 | n_train=200 n_test=100 T=30 FOV=60deg ===
+[no-memory] train_q= 893 test_q= 450 | WM(pos) success=0.016 mean_err=3.441m | VLA(dir) success=0.280 mean_err=63.1deg
+[naive    ] train_q= 893 test_q= 450 | WM(pos) success=0.027 mean_err=3.241m | VLA(dir) success=0.371 mean_err=55.2deg
+[egomem   ] train_q= 893 test_q= 450 | WM(pos) success=1.000 mean_err=0.123m | VLA(dir) success=1.000 mean_err=1.8deg
+
+--- H1 threshold check (EgoMem >= no-memory + 20pp AND >= naive) ---
+ world-model consumer: egomem=1.000 no-mem=0.016 naive=0.027 -> PASS
+ VLA consumer:         egomem=1.000 no-mem=0.280 naive=0.371 -> PASS
+ H1 (both consumers): CONFIRMED
+
+wrote metrics_seed0.json
