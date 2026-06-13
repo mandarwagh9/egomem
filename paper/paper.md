@@ -31,7 +31,10 @@ world-model and 1.00 VLA recall versus ≤ 0.03 for both baselines across two se
 confirming the claim outside the simulator. The advantage further survives heavy
 detection degradation (Gaussian position noise and dropout): EgoMem stays above
 the baselines across a noise×miss grid — its cross-frame averaging makes the margin
-over a raw buffer *widen* as detections worsen. We release the layer as an
+over a raw buffer *widen* as detections worsen. It does **not**, however, survive
+**data-association error**: injecting wrong track ids breaks the layer (a clean
+negative result), pinpointing correct association — not detector precision — as the
+binding constraint for a memory of this design. We release the layer as an
 installable library with a CLI that reproduces every number here.
 
 ## 1. Introduction
@@ -304,21 +307,50 @@ noise grows: the cross-frame integration is itself the robustness. The practical
 reading is a **spec for a perception front-end** — detection error up to ~0.25 m
 and recall as low as ~0.4 still leave the layer useful — well within reach of a
 real detector plus monocular depth, which is the next step (oracle *association*
-remains; see §8).
+remains; see §7.2).
+
+### 7.2 Sensitivity to association errors (a negative result)
+
+H3 leaves one oracle assumption: each detection carries the correct object
+*identity*. We remove it by injecting `assoc_error` — a per-detection probability
+that the object's true position is written under *another* object's id (right
+detection, wrong track), the canonical tracker failure. Table 5 (2-seed mean;
+rows `RESULTS.md` `exp_id = arkit-h4 *`).
+
+**Table 5. EgoMem recall under association error (real ARKitScenes, 2-seed mean).**
+
+| det_noise | miss | assoc_error | World-model | VLA | gate |
+|---|---|---|---|---|---|
+| 0.00 | 0.0 | 0.2 | 0.22 | 0.46 | split (1/2 seeds) |
+| 0.00 | 0.0 | 0.5 | 0.03 | 0.23 | REJECTED |
+| 0.10 | 0.3 | 0.2 | 0.11 | 0.33 | REJECTED |
+
+**This is a negative result, reported as such: H4 is rejected.** Unlike detection
+noise and dropout (§7.1), association error breaks EgoMem — even a 20 % id-swap
+rate makes the result unstable (one seed fails the gate), and 50 % collapses it
+toward the baseline floor. The mechanism is the asymmetry that made §7.1 *positive*:
+EgoMem averages positions per id, so zero-mean *position* noise averages out, but a
+wrong *id* injects a systematic wrong position that the per-id averaging actively
+propagates (and simultaneously starves the true id of evidence). **The binding
+constraint for a memory of this design is therefore correct data association, not
+detector precision** — a sharp, actionable spec for any perception front-end:
+invest in tracking/association, not just detection accuracy. An association-robust
+integration rule (confidence-weighting, outlier rejection, multi-hypothesis ids) is
+the natural design response and is left to future work.
 
 ## 8. Limitations
 
-- **Substrate.** The core §5–§6 study is a geometric egomotion simulator with
-  exact ground truth. §7 addresses the realism gap with real ARKitScenes data
-  (real VIO poses, real layouts), but two gaps remain in §7 too: it uses
-  **oracle data association** (object id + 3D box from annotations) — no real 2D
-  detector or monocular depth yet — and the evaluation is **modest in size**
-  (14 scenes, ≈ 31–33 test queries/seed); the effect is large and consistent but
-  more scenes (GPU/bulk download is available) would tighten the estimate. Note
-  the oracle gap is now narrowed: 7.1 characterizes robustness to detection
-  *noise and dropout* on real data; only object *identity* assignment remains
-  oracle. A real detector + monocular depth with non-oracle association is the
-  clear next step, and 7.1 gives the accuracy/recall envelope it must hit.
+- **Substrate & perception.** The core §5–§6 study is a geometric egomotion
+  simulator with exact ground truth; §7 uses real ARKitScenes data (real VIO
+  poses, real layouts). The oracle-perception gap is now mostly characterized
+  rather than merely assumed: §7.1 shows robustness to detection *noise and
+  dropout*, and §7.2 shows the layer is *broken* by *association* error. So the
+  remaining work is concrete — an association-robust integration rule, and a real
+  detector + monocular depth + tracker meeting the §7.1 envelope (≈ 0.25 m error,
+  ≈ 0.4 recall) **and** the association quality §7.2 shows is essential. The
+  evaluation is also **modest in size** (14 scenes, ≈ 31–33 test queries/seed);
+  the effects are large and consistent but more scenes (GPU/bulk download is
+  available) would tighten the estimates.
 - **Projection convention (§7 impl detail).** The real-data loader auto-selects
   the camera projection convention per scene by maximising in-image visibility;
   scenes picked differing forward/vertical signs. This only affects the
@@ -350,12 +382,14 @@ world-model and 1.00 VLA recall versus ≤ 0.03 baselines, with real ARKit VIO p
 landing on the good-localization side of the §6 boundary, and it **survives heavy
 detection degradation** (§7.1) — its cross-frame averaging makes the margin over a
 raw buffer widen as detections worsen, yielding a usable spec for a perception
-front-end (≈ 0.25 m position error, ≈ 0.4 recall). We release EgoMem as an
-installable library and CLI that reproduces every number reported here, as the
-buyer-side, neutral memory the literature has not yet offered. The clear next step
-is a fully real perception front-end (real detector + monocular depth, at larger
-scale) and non-oracle data association in place of the oracle object identities
-used so far.
+front-end (≈ 0.25 m position error, ≈ 0.4 recall). It is, however, **broken by
+association error** (§7.2, a reported negative result): correct object-identity
+tracking is the binding constraint, because per-id averaging propagates a wrong
+id's position rather than cancelling it. We release EgoMem as an installable
+library and CLI that reproduces every number reported here, as the buyer-side,
+neutral memory the literature has not yet offered. The clearest next steps are an
+association-robust integration rule and a real perception front-end (detector +
+monocular depth + tracking) at larger scale.
 
 ## References
 

@@ -122,15 +122,21 @@ def pick_convention(scene):
     return best[1], best[2]
 
 
-def degrade_scene(sc, det_noise, miss_rate, rng):
+def degrade_scene(sc, det_noise, miss_rate, rng, assoc_error=0.0):
     """Precompute, ONCE per scene, the (possibly degraded) per-frame detection
     lists + the out-of-view recall targets. The SAME degraded detections are then
     fed to all three arms (fairness). Visibility/targets use TRUE geometry; only
-    the detections written to memory are degraded. det_noise=0, miss_rate=0
-    reproduces H2 exactly."""
+    the detections written to memory are degraded. det_noise=0, miss_rate=0,
+    assoc_error=0 reproduces H2 exactly.
+
+    assoc_error: per-detection prob the track id is WRONG (right detection, wrong
+    id) — the object's true position written under another object's id (tracker
+    id-swap / fragmentation). Keying is by obj_id, so a swap both deprives the true
+    object of that observation and corrupts the other."""
     poses, objs, intr, conv = sc["poses"], sc["objs"], sc["intr"], sc["conv"]
     frames = poses[::SUBSAMPLE]
     by_oid = {o["oid"]: o for o in objs}
+    all_oids = list(by_oid)
     true_vis = [visible_objects(p, objs, intr, conv) for p in frames]
     det_frames = []
     for pose, vis in zip(frames, true_vis):
@@ -141,7 +147,11 @@ def degrade_scene(sc, det_noise, miss_rate, rng):
             pc = to_cam(by_oid[oid]["pos_world"], pose)
             if det_noise > 0:
                 pc = pc + rng.normal(0, det_noise, 3)
-            dets.append(Detection(category=by_oid[oid]["label"], pos_cam=pc, confidence=1.0, obj_id=oid))
+            out_oid = oid
+            if assoc_error > 0 and len(all_oids) > 1 and rng.random() < assoc_error:
+                choices = [x for x in all_oids if x != oid]
+                out_oid = int(choices[rng.integers(len(choices))])
+            dets.append(Detection(category=by_oid[oid]["label"], pos_cam=pc, confidence=1.0, obj_id=out_oid))
         det_frames.append((pose, dets))
     seen = set().union(*true_vis[:-1]) if len(true_vis) > 1 else set()
     targets = sorted(seen - true_vis[-1])
@@ -211,6 +221,7 @@ def main():
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1])
     ap.add_argument("--det_noise", type=float, default=0.0, help="Gaussian m on detection pos_cam (H3)")
     ap.add_argument("--miss_rate", type=float, default=0.0, help="per-frame detection drop prob (H3)")
+    ap.add_argument("--assoc_error", type=float, default=0.0, help="per-detection wrong-id prob (H4)")
     args = ap.parse_args()
 
     scene_dirs = sorted(d for d in glob.glob(os.path.join(args.scenes_dir, "*")) if os.path.isdir(d))
@@ -248,13 +259,14 @@ def main():
         return
 
     # ---- recall experiment (split by scene) ----
-    tag = "H2" if (args.det_noise == 0 and args.miss_rate == 0) else \
-          f"H3 det_noise={args.det_noise} miss_rate={args.miss_rate}"
+    degraded = (args.det_noise or args.miss_rate or args.assoc_error)
+    tag = ("H2" if not degraded else
+           f"H3/H4 det_noise={args.det_noise} miss_rate={args.miss_rate} assoc_error={args.assoc_error}")
     print(f"\n=== {tag} out-of-view recall (real ARKitScenes) ===")
     for seed in args.seeds:
         # degrade each scene ONCE (same degraded detections for all arms; reproducible)
         deg_rng = np.random.default_rng(1000 + seed)
-        degr = {sc["vid"]: degrade_scene(sc, args.det_noise, args.miss_rate, deg_rng) for sc in scenes}
+        degr = {sc["vid"]: degrade_scene(sc, args.det_noise, args.miss_rate, deg_rng, args.assoc_error) for sc in scenes}
         split_rng = np.random.default_rng(seed)
         idx = split_rng.permutation(len(scenes))
         n_te = max(1, len(scenes) // 3)

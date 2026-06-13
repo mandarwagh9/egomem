@@ -119,12 +119,28 @@ consistent with the Cycle-1 drift boundary. 12 rows in RESULTS.md.
   labeling and is applied identically across all three arms, so the comparison is
   fair — but a single principled convention is cleaner (note as impl detail).
 
-### Next (Cycle 4, optional — not started)
-Real perception front-end: open-vocab 2D detector + monocular depth on the
-ARKitScenes RGB/depth frames with **non-oracle identity association** (the one
-oracle aspect H3 did not remove), at larger scene scale (GCP+GPU). Write as a new
-hypothesis (H4) when started. H3's §7.1 envelope (≈0.25 m error, ≈0.4 recall)
-gives the bar the front-end must clear.
+**CYCLE 4 COMPLETE — H4 REJECTED (association errors break EgoMem).** Paper §7.2
+(Table 5, a reported negative result).
+
+### H4 result (association-error ablation on real ARKitScenes, 2026-06-14)
+Added `--assoc_error` (per-detection prob the true position is written under
+another object's id — right detection, wrong track). Swept assoc {0.2, 0.5} alone
++ one realistic combined cell (noise0.10/miss0.3/assoc0.2), 2 seeds.
+- **H4 REJECTED.** assoc 0.2 → split (seed0 FAIL WM 0.061/VLA 0.182; seed1 pass)
+  = not robust. assoc 0.5 → REJECTED both (WM ≈0.03, VLA ≈0.23). Combined →
+  REJECTED both. 6 RESULTS rows; raw `stdout_h4.log`.
+- **Why (vs H3 positive):** EgoMem averages positions per id. Zero-mean *position*
+  noise averages out (H3 robust); a wrong *id* injects a systematic wrong position
+  the averaging propagates + starves the true id (H4 fragile). **Correct data
+  association — not detector precision — is the binding constraint.**
+- Honest negative result, fully reported (paper §7.2, abstract, conclusion,
+  limitations). Sharp product spec: invest in tracking/association quality.
+
+### Next (Cycle 5, optional — not started)
+(a) An **association-robust integration rule** for EgoMem (confidence-weighting /
+outlier rejection / multi-hypothesis ids) and re-test against H4's assoc sweep;
+and/or (b) a **real perception front-end** (detector + monocular depth + tracker)
+meeting the §7.1 envelope AND the §7.2 association bar, at larger scale (GCP+GPU).
 
 (Cycle-1 history below.)
 
@@ -206,6 +222,21 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-14 — H4 REJECTED: association errors break EgoMem (Cycle 4 COMPLETE)
+- **Did:** Opened Cycle 4 (`hypothesis_h4.md`); added `--assoc_error` (wrong-id
+  swap) to the loader; swept assoc {0.2,0.5} + a realistic combined cell, 2 seeds;
+  logged `stdout_h4.log`; appended 6 RESULTS rows; added paper §7.2 (Table 5,
+  negative result) + abstract/conclusion/limitations.
+- **Result (real):** **H4 REJECTED.** assoc 0.2 unstable (seed0 fails), 0.5 +
+  combined broken (egomem WM ≈0.03–0.15, VLA ≈0.23–0.36 vs gate). Contrast H3
+  (detection noise/dropout) which it tolerated.
+- **Finding (the key scientific result):** per-id averaging propagates a wrong
+  id's position (vs cancelling zero-mean position noise) → **correct association
+  is the binding constraint, not detector precision.** A clean, honestly-reported
+  negative result; sharp product spec. Four cycles done.
+- **Next task:** none in-loop (Cycle 5 optional: association-robust integration).
+- **Blocker:** none.
 
 ### 2026-06-14 — H3 CONFIRMED: robustness to imperfect perception (Cycle 3 COMPLETE)
 - **Did:** Opened Cycle 3 (`hypothesis_h3.md`, `design_h3.md`); extended
@@ -405,7 +436,7 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ---
 
-STATUS: CYCLES 1, 2 & 3 COMPLETE
+STATUS: CYCLES 1–4 COMPLETE
 
 Cycle 1 (synthetic, 2026-06-13): EgoMem invented, validated (3-seed defended
 result with a characterized pose-drift failure boundary), packaged as an
@@ -421,7 +452,14 @@ miss-rate grid (egomem WM 0.85→0.53 worst, VLA 1.00→0.83; naive collapses, m
 widens). EgoMem tolerates ~0.25 m detection error + ~0.6 miss — a front-end spec.
 Paper §7.1.
 
-Core claim supported with honest scope on synthetic AND real data, robust to
-imperfect perception. Every number in RESULTS.md / paper came from a real run
-logged this loop. Optional future (Cycle 4): real detector + monocular depth with
-non-oracle identity association, larger scale, on GCP+GPU.
+Cycle 4 (association robustness, 2026-06-14): H4 REJECTED — association errors
+(wrong track ids) break EgoMem (per-id averaging propagates a wrong id's position),
+while detection noise/dropout did not. Binding constraint = correct association,
+not detector precision. Honest negative result, paper §7.2.
+
+Core claim supported with honest scope: a model-agnostic memory from egocentric
+video helps both a world model and a VLA on out-of-view recall, on synthetic AND
+real data, robust to detection noise/dropout, with two characterized failure modes
+(heavy pose drift §6; association error §7.2). Every number in RESULTS.md / paper
+came from a real run logged this loop. Optional future (Cycle 5): association-robust
+integration rule; real detector + monocular depth + tracker at larger scale (GPU).

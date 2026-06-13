@@ -1,0 +1,30 @@
+########## det_noise=0.0 miss_rate=0.0 assoc_error=0.2 ##########
+=== H3/H4 det_noise=0.0 miss_rate=0.0 assoc_error=0.2 out-of-view recall (real ARKitScenes) ===
+  [no-memory] train_q=  61 test_q=  33 | WM succ=0.000 err=2.89m | VLA succ=0.000 err=92.7deg
+  [naive    ] train_q=  61 test_q=  33 | WM succ=0.030 err=3.77m | VLA succ=0.030 err=104.7deg
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.061 err=1.23m | VLA succ=0.182 err=62.1deg
+  check: WM FAIL | VLA FAIL -> REJECTED
+  [no-memory] train_q=  63 test_q=  31 | WM succ=0.032 err=2.29m | VLA succ=0.032 err=97.3deg
+  [naive    ] train_q=  63 test_q=  31 | WM succ=0.032 err=2.76m | VLA succ=0.097 err=95.4deg
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.387 err=0.90m | VLA succ=0.742 err=19.4deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+########## det_noise=0.0 miss_rate=0.0 assoc_error=0.5 ##########
+=== H3/H4 det_noise=0.0 miss_rate=0.0 assoc_error=0.5 out-of-view recall (real ARKitScenes) ===
+  [no-memory] train_q=  61 test_q=  33 | WM succ=0.000 err=2.89m | VLA succ=0.000 err=92.7deg
+  [naive    ] train_q=  61 test_q=  33 | WM succ=0.000 err=4.40m | VLA succ=0.030 err=94.4deg
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.000 err=2.00m | VLA succ=0.242 err=62.7deg
+  check: WM FAIL | VLA PASS -> REJECTED
+  [no-memory] train_q=  63 test_q=  31 | WM succ=0.032 err=2.29m | VLA succ=0.032 err=97.3deg
+  [naive    ] train_q=  63 test_q=  31 | WM succ=0.000 err=2.54m | VLA succ=0.097 err=89.5deg
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.065 err=1.91m | VLA succ=0.226 err=68.3deg
+  check: WM FAIL | VLA FAIL -> REJECTED
+########## det_noise=0.10 miss_rate=0.3 assoc_error=0.2 ##########
+=== H3/H4 det_noise=0.1 miss_rate=0.3 assoc_error=0.2 out-of-view recall (real ARKitScenes) ===
+  [no-memory] train_q=  61 test_q=  33 | WM succ=0.000 err=2.89m | VLA succ=0.000 err=92.7deg
+  [naive    ] train_q=  61 test_q=  33 | WM succ=0.000 err=3.84m | VLA succ=0.061 err=108.5deg
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.152 err=1.07m | VLA succ=0.303 err=51.7deg
+  check: WM FAIL | VLA PASS -> REJECTED
+  [no-memory] train_q=  63 test_q=  31 | WM succ=0.032 err=2.29m | VLA succ=0.032 err=97.3deg
+  [naive    ] train_q=  63 test_q=  31 | WM succ=0.032 err=2.25m | VLA succ=0.129 err=81.8deg
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.065 err=1.49m | VLA succ=0.355 err=44.1deg
+  check: WM FAIL | VLA PASS -> REJECTED
