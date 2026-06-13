@@ -22,6 +22,12 @@ pip install -e lib            # from the repo root
 
 Requires Python ≥3.10, numpy, torch (CPU is fine).
 
+## Test
+
+```bash
+pip install -e "lib[dev]" && pytest lib/tests     # 9 tests: geometry, API contract, all 5 arms
+```
+
 ## Run
 
 ```bash
