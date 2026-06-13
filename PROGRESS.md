@@ -66,36 +66,59 @@ defended-result writeup. Revisit if compute proves cheaper/dearer than expected.
 
 ---
 
-## CURRENT PHASE = 1 (RESEARCH)
+## CURRENT PHASE = 2 (DESIGN)
 
-### Next single task — write the gap statement + `research/hypothesis.md`
-`research/landscape.md` now exists (7 verified sources). In one bounded run:
-1. Write the **one-paragraph gap statement** (can live at the top of
-   `hypothesis.md`). It is already strongly evidenced by the lit map: memory is
-   always bound to one consumer paradigm; the best "agnostic" claim is
-   intra-VLA only (MAP-VLA); world-model memory is internal/inseparable;
-   egocentric human video is fed to LLM-agents/generative models, never to a
-   neutral memory a controller consumes.
-2. Write **`research/hypothesis.md`** — ONE falsifiable hypothesis with:
-   - a **named metric** (e.g. long-horizon task success rate, or
-     retrieval-conditioned next-state prediction error),
-   - a **numeric threshold** (e.g. "≥ X points over no-memory baseline"),
-   - the **transfer claim** (the same memory, written once, improves BOTH a
-     world-model consumer AND a VLA consumer without retraining the memory),
-   - and an explicit **falsifier** (what observed result would kill it).
-   Keep the metric measurable on small/sample data and modest hardware — the
-   experiment in Phase 3 must actually run.
-Committing `hypothesis.md` meets the **Phase 1 EXIT** → advance to Phase 2 next.
+Phase 1 closed: `research/hypothesis.md` committed (metric = out-of-view recall
+success rate; threshold = ≥20 pp over no-memory AND ≥ naive memory, for both
+consumers; transfer claim = one memory, no per-consumer retraining; explicit
+falsifiers).
 
-### Constraints to respect when writing the hypothesis
-- One claim only; do not bundle two. Pick the single sharpest testable one.
-- It must be falsifiable on hardware we actually have (assume CPU / a single
-  modest GPU at most until proven otherwise) and on a *small* slice of an
-  egocentric dataset — verify dataset availability in Phase 2, not now.
+### Next single task — write `research/design.md`
+Spec the smallest real version that tests H1. It must contain:
+1. **Neutral API signatures** — `write(obs) -> mem` and
+   `query(state) -> retrieved_context`, with the exact types of `obs`, `state`,
+   and `retrieved_context`. obs carries RGB frame + depth + camera pose (+ any
+   detections). Keep it paradigm-neutral (no VLA- or world-model-specific
+   fields).
+2. **Data contract** both consumers read — what a query returns (e.g. a small
+   set of recalled object records: id, category, last-seen 3D position in the
+   *current* camera frame, confidence) such that a world-model head and a VLA
+   head can each consume it without memory-side changes.
+3. **The dataset** — pick the SMALLEST egocentric source with RGB+depth+pose and
+   **verify it is actually obtainable this environment** (download size, license,
+   a tiny sample). Candidates: egocentric HOI corpus, EPIC-Kitchens/Ego4D clip,
+   LeRobot-v3 egocentric sample, or (fallback) a *procedurally generated*
+   egomotion-over-a-static-object-layout synthetic set if no real clip is
+   feasible on this hardware. State the choice and why.
+4. **Baselines** — (i) no-memory, (ii) naive memory (raw frame buffer / flat
+   embedding store), (iii) EgoMem (pose-aware persistent object memory).
+5. **The single experiment** — the exact out-of-view recall protocol, the two
+   consumer read-heads, what gets logged, and how success/threshold is computed.
+
+### Constraints
+- Design for CPU / one modest GPU. If a real egocentric clip is too heavy to pull
+  here, the design's primary path should be the synthetic egomotion set (still a
+  *real* run of the memory layer + consumers), with the real-clip version named
+  as a Phase-4 stretch. Decide this in design.md, do not defer it to Phase 3.
+- Do not write code yet — Phase 3 implements. Design only.
 
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-13 — Hypothesis written (Phase 1 → 2)
+- **Did:** Wrote `research/hypothesis.md`: one-paragraph gap statement + the
+  single falsifiable H1. Test task = **out-of-view object recall** (object
+  permanence under egomotion), a probe both a world model and a VLA genuinely
+  need. Metric = success rate (%); threshold = EgoMem ≥ no-memory + 20 pp AND
+  ≥ naive-memory, **for both consumers**; transfer claim = one memory written
+  once, queried unchanged by both; 4 explicit falsifiers. Feasibility scoped to
+  CPU / one modest GPU on a small egocentric slice.
+- **Finding:** Phase 1 EXIT met → advanced **CURRENT PHASE = 2 (DESIGN)**.
+- **Next task:** Write `research/design.md` (API signatures, data contract,
+  dataset choice **verified obtainable here**, 3 baselines, the single
+  experiment). See the CURRENT PHASE block.
+- **Blocker:** none.
 
 ### 2026-06-13 — Lit map built
 - **Did:** Ran targeted WebSearch + WebFetch across the 4 areas. Fetched and
