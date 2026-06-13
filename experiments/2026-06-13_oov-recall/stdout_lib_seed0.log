@@ -1,0 +1,7 @@
+EgoMem out-of-view recall benchmark
+  config: seed=0 n_train=200 n_test=100 pose_drift=0.0
+  arm         WM pos succ@0.5m  WM err(m)  VLA dir succ@30d  VLA err(deg)
+  no-memory              0.016      3.441             0.280          63.1
+  naive                  0.027      3.241             0.371          55.2
+  egomem                 1.000      0.123             1.000           1.8
+  H1 (egomem >= no-memory+20pp AND >= naive, both consumers): CONFIRMED  [WM PASS | VLA PASS]

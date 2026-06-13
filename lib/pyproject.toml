@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "egomem"
+version = "0.1.0"
+description = "A model-agnostic memory layer for robotics from egocentric human video"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Black Robotics" }]
+dependencies = [
+    "numpy>=1.24",
+    "torch>=2.0",
+]
+
+[project.scripts]
+egomem = "egomem.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["egomem*"]

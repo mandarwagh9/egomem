@@ -66,7 +66,35 @@ defended-result writeup. Revisit if compute proves cheaper/dearer than expected.
 
 ---
 
-## CURRENT PHASE = 5 (BUILD)
+## CURRENT PHASE = 6 (PAPER)
+
+Phase 5 closed: `lib/egomem` is a real installable package. `pip install -e lib`
+works; `from egomem import EgoMem, Observation, QueryState, Detection` imports;
+console script `egomem demo` and `egomem sim` both run; **`egomem sim --seed 0`
+reproduces the committed seed-0 numbers exactly** (no-mem 0.016/0.280, naive
+0.027/0.371, egomem 1.000/1.000 — see `experiments/.../stdout_lib_seed0.log`),
+proving the library is faithful to the validated experiment.
+
+### Next single task — write `paper/paper.md` in full
+Use ONLY committed material: `research/landscape.md` (+ BIBLIOGRAPHY.md),
+`research/hypothesis.md`, `research/design.md`, and **every number from
+RESULTS.md** (24 rows). Sections: abstract, intro, related work, method,
+experiments, results, ablations (the pose-drift boundary), limitations,
+conclusion. Rules: every quantitative claim cites a RESULTS.md row; report the
+negative boundary (drift 0.15 rejects H1 for the world-model consumer) honestly;
+**zero TODO markers**; no number that isn't in RESULTS.md. A figure/table is fine
+only if its data is a RESULTS.md row.
+Phase 6 EXIT: paper complete, zero TODOs, every figure/number traces to data.
+
+### Honest limitations the paper MUST state
+- Synthetic egomotion testbed (no real human video yet); oracle data association
+  (obj_id given) — real detection/tracking not tested.
+- Read-heads are tiny MLPs ≈ linear readouts; the claim is about *information
+  availability in a neutral memory*, not consumer sophistication.
+- Real-egocentric-clip validation is future work (Phase-4/5 stretch; GCP+GPU
+  available — see Resources). The pose-drift ablation is the proxy for real VIO.
+
+(Phase 4 defended-result detail retained below for the paper writer.)
 
 Phase 4 closed with a **defended result** (3 seeds clean + a characterized
 stress boundary). See RESULTS.md (24 rows) and `experiments/2026-06-13_oov-recall/`.
@@ -121,6 +149,18 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-13 — Library packaged + fresh-install verified (Phase 5 → 6)
+- **Did:** Refactored the validated core into installable `lib/egomem` (neutral
+  API dataclasses + 3 memory arms + geometry in `memory.py`; `sim.py` library-
+  backed benchmark; `cli.py` with `demo`/`sim`; `pyproject.toml`; `lib/README.md`).
+  `pip install -e lib` succeeded; verified import, `egomem demo`, console script
+  on PATH, and `egomem sim --seed 0` **reproduces seed-0 exactly**.
+- **Finding:** packaged library == experiment (byte-for-byte metrics). Phase 5
+  EXIT met → **CURRENT PHASE = 6 (PAPER)**.
+- **Next task:** write `paper/paper.md` in full from committed material + every
+  RESULTS.md row (see above).
+- **Blocker:** none.
 
 ### 2026-06-13 — Seed stability + pose-drift stress; defended result (Phase 4 → 5)
 - **Did:** Ran seeds 1 & 2 of the clean config (H1 CONFIRMED both, all 3 seeds:
