@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Data / model artifacts (keep these out of git; logs+configs stay in experiments/)
+*.mp4
+*.rrd
+*.ckpt
+*.pt
+*.pth
+*.npz
+datasets/
+checkpoints/
+*.parquet
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
