@@ -66,45 +66,58 @@ defended-result writeup. Revisit if compute proves cheaper/dearer than expected.
 
 ---
 
-## CURRENT PHASE = 2 (DESIGN)
+## CURRENT PHASE = 3 (EXPERIMENT)
 
-Phase 1 closed: `research/hypothesis.md` committed (metric = out-of-view recall
-success rate; threshold = ≥20 pp over no-memory AND ≥ naive memory, for both
-consumers; transfer claim = one memory, no per-consumer retraining; explicit
-falsifiers).
+Phase 2 closed: `research/design.md` committed — neutral API, data contract,
+dataset (synthetic egomotion testbed primary; real-clip = Phase-4 stretch; CPU
+verified: py3.13/numpy/torch-cpu/sklearn), 3 baseline arms (no-memory / naive /
+EgoMem), and the single out-of-view-recall experiment.
 
-### Next single task — write `research/design.md`
-Spec the smallest real version that tests H1. It must contain:
-1. **Neutral API signatures** — `write(obs) -> mem` and
-   `query(state) -> retrieved_context`, with the exact types of `obs`, `state`,
-   and `retrieved_context`. obs carries RGB frame + depth + camera pose (+ any
-   detections). Keep it paradigm-neutral (no VLA- or world-model-specific
-   fields).
-2. **Data contract** both consumers read — what a query returns (e.g. a small
-   set of recalled object records: id, category, last-seen 3D position in the
-   *current* camera frame, confidence) such that a world-model head and a VLA
-   head can each consume it without memory-side changes.
-3. **The dataset** — pick the SMALLEST egocentric source with RGB+depth+pose and
-   **verify it is actually obtainable this environment** (download size, license,
-   a tiny sample). Candidates: egocentric HOI corpus, EPIC-Kitchens/Ego4D clip,
-   LeRobot-v3 egocentric sample, or (fallback) a *procedurally generated*
-   egomotion-over-a-static-object-layout synthetic set if no real clip is
-   feasible on this hardware. State the choice and why.
-4. **Baselines** — (i) no-memory, (ii) naive memory (raw frame buffer / flat
-   embedding store), (iii) EgoMem (pose-aware persistent object memory).
-5. **The single experiment** — the exact out-of-view recall protocol, the two
-   consumer read-heads, what gets logged, and how success/threshold is computed.
+### Next single task — implement + run the experiment
+Build exactly `design.md` §1–§5 as a single runnable script under
+`experiments/2026-06-13_oov-recall/` (or a small `lib/`-staged module it imports;
+keep it minimal — clean packaging is Phase 5, not now). Concretely:
+1. Synthetic egomotion simulator (rooms, objects, camera trajectory, FOV-based
+   observation with noise) — exact ground truth.
+2. Three memory arms behind the neutral `write/query` API: no-memory, naive
+   (raw-frame buffer, no pose transform), EgoMem (pose-aware world-frame
+   persistent object store).
+3. Two tiny CPU read-heads (world-model = next-pos MLP; VLA = goal-direction
+   MLP), identical arch across arms, trained per arm on train split.
+4. Eval on held-out out-of-view recall queries → per-arm × per-consumer success
+   rate (+ mean error). Fixed seed first; ≥2 seeds is Phase 4.
+5. Write `config.json` + full `stdout.log` + `metrics.json` to the experiment
+   folder; **append ONE row to RESULTS.md** with the real numbers.
+6. Compute the H1 threshold check (EgoMem ≥ no-memory +20 pp AND ≥ naive, BOTH
+   consumers) and record PASS/FAIL — do NOT fabricate; report whatever runs.
 
 ### Constraints
-- Design for CPU / one modest GPU. If a real egocentric clip is too heavy to pull
-  here, the design's primary path should be the synthetic egomotion set (still a
-  *real* run of the memory layer + consumers), with the real-clip version named
-  as a Phase-4 stretch. Decide this in design.md, do not defer it to Phase 3.
-- Do not write code yet — Phase 3 implements. Design only.
+- CPU only. Keep N/M/T small enough to finish in minutes (design suggests
+  N≈300, M 6–10, T≈30). Scale DOWN if slow; a tiny real run beats a big imaginary
+  one. NEVER write a number that wasn't produced by an actual run.
+- If something can't run (dep/memory), scale down or mark STATUS: BLOCKED with
+  the exact blocker — do not fake output.
 
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-13 — Design written (Phase 2 → 3)
+- **Did:** Verified the runtime (py3.13.2, numpy 1.26.4, torch 2.10.0 CPU-only,
+  sklearn 1.7.0 — no CUDA). Wrote `research/design.md`: neutral API
+  (`Observation`/`QueryState`/`RecalledObject`, `write`/`query`), data contract
+  (one non-parametric memory, two heads read the same `RecalledObject` list),
+  dataset = synthetic egomotion testbed (primary; real egocentric clip = Phase-4
+  stretch — gated downloads + no clean 3D/depth/pose truth make it infeasible on
+  CPU this iteration), 3 baseline arms, and the single out-of-view-recall
+  experiment with the exact threshold check.
+- **Finding:** Memory is non-parametric → the transfer claim is demonstrated (one
+  store, two consumers, unchanged), not assumed; the falsifiable gates are
+  *utility* (≥20 pp over no-memory) and *structure* (≥ naive). Phase 2 EXIT met
+  → **CURRENT PHASE = 3 (EXPERIMENT)**.
+- **Next task:** Implement + run the experiment (design §1–§5); log raw output;
+  append one RESULTS.md row. See CURRENT PHASE block.
+- **Blocker:** none.
 
 ### 2026-06-13 — Hypothesis written (Phase 1 → 2)
 - **Did:** Wrote `research/hypothesis.md`: one-paragraph gap statement + the
