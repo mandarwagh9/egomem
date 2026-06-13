@@ -66,6 +66,43 @@ defended-result writeup. Revisit if compute proves cheaper/dearer than expected.
 
 ---
 
+## ===== ACTIVE: CYCLE 2 — real-data validation (H2) =====
+
+Cycle 1 (synthetic) is COMPLETE (full loop, history below). Cycle 2 tests whether
+the result survives on **real egocentric data**, reusing the unchanged `egomem`
+library. New falsifiable claim: `research/hypothesis_h2.md` (H2 = same ≥20 pp /
+≥naive gate, both consumers, on ARKitScenes 3dod). Design: `research/design_h2.md`.
+Cycle-1 `landscape.md` still covers the field.
+
+**CYCLE 2 CURRENT PHASE = 3 (EXPERIMENT).** H2 research/design done this run;
+feasibility VERIFIED — ARKitScenes CDN reachable, 549 val scenes, 187 MB/scene,
+formats inspected on scene 41069021.
+
+### Next single task — implement the ARKit loader + run H2
+Build `experiments/2026-06-13_arkit-oov/`:
+1. `arkit_loader.py`: parse `lowres_wide.traj` (official `TrajStringToMatrix`:
+   tokens[1:4]=angle-axis world→cam, tokens[4:7]=translation; invert → cam→world),
+   `*_3dod_annotation.json` obb centroids, `.pincam` intrinsics. **Resolve the obb
+   cm-vs-m / frame issue and PASS the projection validation gate** (box centroids
+   land in-image at sane depth) BEFORE any recall number. Can't verify → STATUS:
+   BLOCKED with the exact mismatch.
+2. Download ~12–16 Validation scenes (curl per-scene zip; reuse cached
+   `/tmp/41069021`). ~2–3 GB; CPU; GCP if bulk wanted.
+3. Drive the unchanged `egomem` arms via `Observation`/`QueryState`; out-of-view
+   recall protocol (subsample ~every 20th frame); ≥2 head seeds.
+4. Log to the experiment folder; append RESULTS.md rows (dataset =
+   ARKitScenes-3dod + scene count); threshold check = H2 verdict.
+
+### Cycle-2 constraints
+- HARD: no recall number before the projection validation gate passes — real data
+  has coordinate gotchas; verify alignment, don't assume.
+- Reuse the library unchanged (a needed fix = a finding; note it). CPU ok;
+  escalate to GCP only if compute demands it.
+
+(Cycle-1 history below.)
+
+---
+
 ## CURRENT PHASE = 7 (PACKAGE)
 
 Phase 6 closed: `paper/paper.md` written in full (abstract, intro, related work,
@@ -142,6 +179,22 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-13 — Opened Cycle 2 (real-data validation); feasibility verified
+- **Did:** Started a NEW falsifiable cycle to validate EgoMem on real egocentric
+  data. Verified ARKitScenes 3dod is reachable & ungated from this env: pulled the
+  download script + metadata.csv (HTTP 200; 5047 scenes, 549 Validation),
+  HEAD'd a scene zip (187 MB), and downloaded+inspected one full scene
+  (41069021): `lowres_wide.traj` (1878 poses, 7 cols), 1878 RGB+depth frames,
+  per-frame `.pincam` intrinsics, `*_3dod_annotation.json` (18 obb objects:
+  label + centroid/axes/normalizedAxes). Wrote `research/hypothesis_h2.md` (H2)
+  and `research/design_h2.md` (ARKitScenes protocol, reusing the unchanged
+  library). Flagged the obb-units/frame (cm-vs-m) alignment as the key risk +
+  mandated a projection validation gate before any number.
+- **Finding:** Real-data path is feasible and concrete; Cycle 2 at EXPERIMENT.
+- **Next task:** implement `arkit_loader.py`, pass the validation gate, run H2 on
+  ~12–16 val scenes, log + append RESULTS rows. (Cached scene at /tmp/41069021.)
+- **Blocker:** none (one open format detail to resolve in-loader, gated).
 
 ### 2026-06-13 — Packaged; project COMPLETE (Phase 7)
 - **Did:** Rewrote top-level `README.md` as the package front page (pitch,
@@ -280,9 +333,13 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ---
 
-STATUS: COMPLETE
+STATUS: CYCLE 1 COMPLETE — CYCLE 2 ACTIVE (real-data validation, H2)
 
-Loop finished 2026-06-13. EgoMem invented, validated (3-seed defended result with a
-characterized failure boundary), packaged as an installable library + CLI, and
+Cycle 1 finished 2026-06-13: EgoMem invented, validated (3-seed defended result
+with a characterized failure boundary), packaged as an installable library + CLI,
 written up in paper/paper.md. Core claim supported with honest scope. Every number
 in RESULTS.md / paper came from a real run logged this loop.
+
+Cycle 2 opened 2026-06-13: validating the same library on REAL egocentric data
+(ARKitScenes 3dod). See the ACTIVE CYCLE 2 block near the top. Next: implement the
+ARKit loader (pass the projection validation gate), run H2, log results.
