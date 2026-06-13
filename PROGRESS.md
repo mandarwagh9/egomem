@@ -143,6 +143,23 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## RUN LOG (newest first)
 
+### 2026-06-13 — Packaged; project COMPLETE (Phase 7)
+- **Did:** Rewrote top-level `README.md` as the package front page (pitch,
+  headline-result table with the localization caveat, install + reproduce
+  commands, repo map, how-it-works). Verified: `egomem demo` runs; BIBLIOGRAPHY
+  has 7 real sources (8th grep hit is the format template, not a source); git is
+  clean of build artifacts (egg-info gitignored). README has repro steps, the
+  demo runs, BIBLIOGRAPHY is in place → Phase 7 EXIT met.
+- **Finding:** Full loop complete (research → defended result → library → paper →
+  package). Core claim **supported with scope**: one model-agnostic, non-parametric
+  memory from egocentric observations improves BOTH a world-model and a VLA
+  consumer on out-of-view recall (0.999 / 1.000 vs ≤0.018 / ≤0.317 baselines, 3
+  seeds), conditional on localization quality (heavy pose drift rejects H1 for the
+  precise world-model consumer). Honest, reproducible, baselined.
+- **Next task:** none in-loop. Future work (not this loop): real-egocentric-clip
+  validation on GCP+GPU (LeRobot-v3 sample, real detections/depth/pose).
+- **Blocker:** none.
+
 ### 2026-06-13 — Paper written (Phase 6 → 7)
 - **Did:** Wrote `paper/paper.md` in full from committed material + every
   RESULTS.md row. Table 1 (clean, 3 seeds) and Table 2 (pose-drift ablation) each
@@ -260,3 +277,12 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 - **Finding:** Clean start. Phase 1, no work done yet.
 - **Next task:** Build the lit map → `research/landscape.md` (see above).
 - **Blocker:** none.
+
+---
+
+STATUS: COMPLETE
+
+Loop finished 2026-06-13. EgoMem invented, validated (3-seed defended result with a
+characterized failure boundary), packaged as an installable library + CLI, and
+written up in paper/paper.md. Core claim supported with honest scope. Every number
+in RESULTS.md / paper came from a real run logged this loop.
