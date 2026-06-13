@@ -1,0 +1,66 @@
+########## det_noise=0.10 miss_rate=0.0 ##########
+=== projection validation gate (per scene) ===
+=== H3 det_noise=0.1 miss_rate=0.0 out-of-view recall (real ARKitScenes) ===
+  [no-memory] train_q=  61 test_q=  33 | WM succ=0.000 err=2.89m | VLA succ=0.000 err=92.7deg
+  [naive    ] train_q=  61 test_q=  33 | WM succ=0.030 err=3.83m | VLA succ=0.030 err=105.0deg
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.727 err=0.39m | VLA succ=1.000 err=7.0deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+  [no-memory] train_q=  63 test_q=  31 | WM succ=0.032 err=2.29m | VLA succ=0.032 err=97.3deg
+  [naive    ] train_q=  63 test_q=  31 | WM succ=0.000 err=2.91m | VLA succ=0.065 err=78.2deg
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=1.000 err=0.22m | VLA succ=1.000 err=5.5deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+########## det_noise=0.25 miss_rate=0.0 ##########
+=== projection validation gate (per scene) ===
+=== H3 det_noise=0.25 miss_rate=0.0 out-of-view recall (real ARKitScenes) ===
+  [no-memory] train_q=  61 test_q=  33 | WM succ=0.000 err=2.89m | VLA succ=0.000 err=92.7deg
+  [naive    ] train_q=  61 test_q=  33 | WM succ=0.000 err=4.08m | VLA succ=0.000 err=107.5deg
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.606 err=0.50m | VLA succ=0.970 err=8.9deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+  [no-memory] train_q=  63 test_q=  31 | WM succ=0.032 err=2.29m | VLA succ=0.032 err=97.3deg
+  [naive    ] train_q=  63 test_q=  31 | WM succ=0.000 err=3.18m | VLA succ=0.097 err=90.7deg
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.710 err=0.37m | VLA succ=1.000 err=9.2deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+########## det_noise=0.0 miss_rate=0.3 ##########
+=== projection validation gate (per scene) ===
+=== H3 det_noise=0.0 miss_rate=0.3 out-of-view recall (real ARKitScenes) ===
+  [no-memory] train_q=  61 test_q=  33 | WM succ=0.000 err=2.89m | VLA succ=0.000 err=92.7deg
+  [naive    ] train_q=  61 test_q=  33 | WM succ=0.030 err=3.71m | VLA succ=0.091 err=104.2deg
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.636 err=0.53m | VLA succ=0.939 err=12.3deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+  [no-memory] train_q=  63 test_q=  31 | WM succ=0.032 err=2.29m | VLA succ=0.032 err=97.3deg
+  [naive    ] train_q=  63 test_q=  31 | WM succ=0.032 err=2.94m | VLA succ=0.097 err=63.4deg
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.903 err=0.39m | VLA succ=0.903 err=9.1deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+########## det_noise=0.0 miss_rate=0.6 ##########
+=== projection validation gate (per scene) ===
+=== H3 det_noise=0.0 miss_rate=0.6 out-of-view recall (real ARKitScenes) ===
+  [no-memory] train_q=  61 test_q=  33 | WM succ=0.000 err=2.89m | VLA succ=0.000 err=92.7deg
+  [naive    ] train_q=  61 test_q=  33 | WM succ=0.030 err=3.05m | VLA succ=0.061 err=88.8deg
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.727 err=0.68m | VLA succ=0.879 err=21.1deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+  [no-memory] train_q=  63 test_q=  31 | WM succ=0.032 err=2.29m | VLA succ=0.032 err=97.3deg
+  [naive    ] train_q=  63 test_q=  31 | WM succ=0.000 err=2.75m | VLA succ=0.194 err=72.6deg
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.548 err=0.87m | VLA succ=0.774 err=21.2deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+########## det_noise=0.10 miss_rate=0.3 ##########
+=== projection validation gate (per scene) ===
+=== H3 det_noise=0.1 miss_rate=0.3 out-of-view recall (real ARKitScenes) ===
+  [no-memory] train_q=  61 test_q=  33 | WM succ=0.000 err=2.89m | VLA succ=0.000 err=92.7deg
+  [naive    ] train_q=  61 test_q=  33 | WM succ=0.030 err=3.66m | VLA succ=0.091 err=107.6deg
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.636 err=0.54m | VLA succ=0.970 err=10.5deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+  [no-memory] train_q=  63 test_q=  31 | WM succ=0.032 err=2.29m | VLA succ=0.032 err=97.3deg
+  [naive    ] train_q=  63 test_q=  31 | WM succ=0.032 err=2.33m | VLA succ=0.161 err=65.7deg
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.871 err=0.37m | VLA succ=0.968 err=7.3deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+########## det_noise=0.25 miss_rate=0.6 ##########
+=== projection validation gate (per scene) ===
+=== H3 det_noise=0.25 miss_rate=0.6 out-of-view recall (real ARKitScenes) ===
+  [no-memory] train_q=  61 test_q=  33 | WM succ=0.000 err=2.89m | VLA succ=0.000 err=92.7deg
+  [naive    ] train_q=  61 test_q=  33 | WM succ=0.000 err=3.29m | VLA succ=0.000 err=103.0deg
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.606 err=0.85m | VLA succ=0.909 err=22.2deg
+  check: WM PASS | VLA PASS -> CONFIRMED
+  [no-memory] train_q=  63 test_q=  31 | WM succ=0.032 err=2.29m | VLA succ=0.032 err=97.3deg
+  [naive    ] train_q=  63 test_q=  31 | WM succ=0.000 err=2.56m | VLA succ=0.161 err=62.6deg
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.452 err=1.10m | VLA succ=0.742 err=23.3deg
+  check: WM PASS | VLA PASS -> CONFIRMED

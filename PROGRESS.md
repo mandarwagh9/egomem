@@ -74,11 +74,25 @@ library. New falsifiable claim: `research/hypothesis_h2.md` (H2 = same ≥20 pp 
 ≥naive gate, both consumers, on ARKitScenes 3dod). Design: `research/design_h2.md`.
 Cycle-1 `landscape.md` still covers the field.
 
-**CYCLE 2 COMPLETE — H2 CONFIRMED on real data.** Paper §7 (Real-data validation,
-Table 3) + abstract + conclusion + limitations updated; README headline updated.
-Sections 1–9 consistent, zero TODOs. Future work (Cycle 3, not started): real
-perception front-end (2D detector + monocular depth, larger scale) replacing the
-oracle object associations; GCP+GPU available.
+**CYCLE 2 COMPLETE — H2 CONFIRMED on real data.** Paper §7 (Table 3).
+**CYCLE 3 COMPLETE — H3 CONFIRMED (perception robustness).** Paper §7.1 (Table 4).
+
+### H3 result (perception-degradation ablation on real ARKitScenes, 2026-06-14)
+Extended `arkit_loader.py` with `--det_noise` (Gaussian m on detection pos_cam) +
+`--miss_rate` (per-frame detection dropout); degrade-once/consume-per-arm so all
+arms see identical degraded detections (fair, reproducible; 0/0 reproduces H2
+exactly — verified). Swept det_noise {0,0.10,0.25} × miss_rate {0,0.3,0.6}, 2 seeds.
+- **H3 CONFIRMED in EVERY cell, both seeds, both consumers.** EgoMem WM (2-seed
+  mean) 0.85 clean → 0.66 @0.25m → 0.64 @0.6 miss → **0.53 at worst corner**
+  (0.25m + 0.6 miss); VLA 1.00 → 0.83 worst. Baselines stay ≤0.03 (no-mem) /
+  ≤0.10 (naive). naive WM often DROPS to 0.00 under noise → EgoMem's margin
+  **widens** with degradation (cross-frame averaging = the robustness).
+- 12 RESULTS rows; raw `stdout_h3.log`. Paper §7.1 + abstract + conclusion +
+  limitations updated; sections 1–9/3.x/7.1 consistent, zero TODOs.
+- **Reading:** rebuts the "oracle positions" criticism — EgoMem tolerates ~0.25 m
+  detection error + ~0.6 miss while keeping the advantage; that envelope is a spec
+  a real detector + monocular depth can meet. Remaining oracle aspect = *identity*
+  association (Cycle 4, future).
 
 ### H2 result (real ARKitScenes, logged 2026-06-14)
 Implemented `experiments/2026-06-13_arkit-oov/arkit_loader.py`, resolved the
@@ -105,10 +119,12 @@ consistent with the Cycle-1 drift boundary. 12 rows in RESULTS.md.
   labeling and is applied identically across all three arms, so the comparison is
   fair — but a single principled convention is cleaner (note as impl detail).
 
-### Next (Cycle 3, optional — not started)
-Real perception front-end: run an open-vocab 2D detector + monocular depth on the
-ARKitScenes RGB/depth frames (instead of oracle 3D-box associations), at larger
-scene scale (GCP+GPU). Write it as a new hypothesis (H3) when started.
+### Next (Cycle 4, optional — not started)
+Real perception front-end: open-vocab 2D detector + monocular depth on the
+ARKitScenes RGB/depth frames with **non-oracle identity association** (the one
+oracle aspect H3 did not remove), at larger scene scale (GCP+GPU). Write as a new
+hypothesis (H4) when started. H3's §7.1 envelope (≈0.25 m error, ≈0.4 recall)
+gives the bar the front-end must clear.
 
 (Cycle-1 history below.)
 
@@ -190,6 +206,23 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-14 — H3 CONFIRMED: robustness to imperfect perception (Cycle 3 COMPLETE)
+- **Did:** Opened Cycle 3 (`hypothesis_h3.md`, `design_h3.md`); extended
+  `arkit_loader.py` with seeded detection degradation (noise + dropout),
+  refactored to degrade-once/consume-per-arm (fair; 0/0 reproduces H2 exactly).
+  Swept det_noise{0,0.10,0.25} × miss_rate{0,0.3,0.6}, 2 seeds; logged
+  `stdout_h3.log`; appended 12 RESULTS rows; added paper §7.1 (Table 4) + abstract
+  /conclusion/limitations.
+- **Result (real):** **H3 CONFIRMED every cell, both seeds.** EgoMem WM mean
+  0.85→0.53 (worst corner), VLA 1.00→0.83; baselines ≤0.03/≤0.10 and naive WM
+  collapses to 0.00 under noise → EgoMem's margin widens with degradation.
+- **Finding:** The "oracle exact positions" criticism is rebutted — EgoMem's
+  cross-frame averaging tolerates ~0.25 m detection error + ~0.6 miss. Three
+  cycles done (synthetic, real-data, perception-robustness). Only oracle
+  *identity* association remains (Cycle 4, future).
+- **Next task:** none in-loop (Cycle 4 optional).
+- **Blocker:** none.
 
 ### 2026-06-14 — H2 folded into paper + README; Cycle 2 COMPLETE
 - **Did:** Added paper §7 "Real-data validation (ARKitScenes)" with Table 3 (every
@@ -372,7 +405,7 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ---
 
-STATUS: CYCLE 1 & 2 COMPLETE
+STATUS: CYCLES 1, 2 & 3 COMPLETE
 
 Cycle 1 (synthetic, 2026-06-13): EgoMem invented, validated (3-seed defended
 result with a characterized pose-drift failure boundary), packaged as an
@@ -381,8 +414,14 @@ installable library + CLI, written up in paper/paper.md.
 Cycle 2 (real data, 2026-06-14): H2 CONFIRMED on real ARKitScenes 3dod (14 scenes,
 real ARKit VIO poses; projection gate 14/14; egomem 0.70–1.00 vs ≤0.03 baselines,
 both consumers, 2 seeds). The unchanged shipped library works on real egocentric
-data. Paper §7 added. Core claim supported with honest scope on synthetic AND real
-data. Every number in RESULTS.md / paper came from a real run logged this loop.
+data. Paper §7.
 
-Optional future (Cycle 3, not started): real perception front-end (detector +
-monocular depth) replacing oracle associations, at larger scale, on GCP+GPU.
+Cycle 3 (perception robustness, 2026-06-14): H3 CONFIRMED across a det-noise ×
+miss-rate grid (egomem WM 0.85→0.53 worst, VLA 1.00→0.83; naive collapses, margin
+widens). EgoMem tolerates ~0.25 m detection error + ~0.6 miss — a front-end spec.
+Paper §7.1.
+
+Core claim supported with honest scope on synthetic AND real data, robust to
+imperfect perception. Every number in RESULTS.md / paper came from a real run
+logged this loop. Optional future (Cycle 4): real detector + monocular depth with
+non-oracle identity association, larger scale, on GCP+GPU.

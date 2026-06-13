@@ -122,38 +122,53 @@ def pick_convention(scene):
     return best[1], best[2]
 
 
-def build_samples(scenes, arm_name, conv):
+def degrade_scene(sc, det_noise, miss_rate, rng):
+    """Precompute, ONCE per scene, the (possibly degraded) per-frame detection
+    lists + the out-of-view recall targets. The SAME degraded detections are then
+    fed to all three arms (fairness). Visibility/targets use TRUE geometry; only
+    the detections written to memory are degraded. det_noise=0, miss_rate=0
+    reproduces H2 exactly."""
+    poses, objs, intr, conv = sc["poses"], sc["objs"], sc["intr"], sc["conv"]
+    frames = poses[::SUBSAMPLE]
+    by_oid = {o["oid"]: o for o in objs}
+    true_vis = [visible_objects(p, objs, intr, conv) for p in frames]
+    det_frames = []
+    for pose, vis in zip(frames, true_vis):
+        dets = []
+        for oid in sorted(vis):
+            if miss_rate > 0 and rng.random() < miss_rate:
+                continue
+            pc = to_cam(by_oid[oid]["pos_world"], pose)
+            if det_noise > 0:
+                pc = pc + rng.normal(0, det_noise, 3)
+            dets.append(Detection(category=by_oid[oid]["label"], pos_cam=pc, confidence=1.0, obj_id=oid))
+        det_frames.append((pose, dets))
+    seen = set().union(*true_vis[:-1]) if len(true_vis) > 1 else set()
+    targets = sorted(seen - true_vis[-1])
+    return dict(det_frames=det_frames, targets=targets, by_oid=by_oid, final=frames[-1], n_frames=len(frames))
+
+
+def samples_from(arm_name, degr):
+    """Run one memory arm over precomputed (degraded) detections -> (X, Ypos, Ydir)."""
+    if degr["n_frames"] < 3:
+        return [], [], []
+    mem = MEMORIES[arm_name]()
+    for pose, dets in degr["det_frames"]:
+        mem.write(Observation(t=0, cam_pose=pose, detections=dets))
+    last_dets = degr["det_frames"][-1][1]
+    recs = {r.obj_id: r for r in mem.query(QueryState(t=degr["n_frames"] - 1, cam_pose=degr["final"], visible=last_dets))}
     X, Ypos, Ydir = [], [], []
-    for sc in scenes:
-        poses, objs, intr = sc["poses"], sc["objs"], sc["intr"]
-        frames = poses[::SUBSAMPLE]
-        if len(frames) < 3:
-            continue
-        seen = set()
-        for pose in frames[:-1]:
-            seen |= visible_objects(pose, objs, intr, conv)
-        final = frames[-1]
-        vis_now = visible_objects(final, objs, intr, conv)
-        mem = MEMORIES[arm_name]()
-        by_oid = {o["oid"]: o for o in objs}
-        for pose in frames:
-            dets = [Detection(category=by_oid[oid]["label"], pos_cam=to_cam(by_oid[oid]["pos_world"], pose),
-                              confidence=1.0, obj_id=oid) for oid in visible_objects(pose, objs, intr, conv)]
-            mem.write(Observation(t=0, cam_pose=pose, detections=dets))
-        last_dets = [Detection(category=by_oid[oid]["label"], pos_cam=to_cam(by_oid[oid]["pos_world"], final),
-                               confidence=1.0, obj_id=oid) for oid in vis_now]
-        recs = {r.obj_id: r for r in mem.query(QueryState(t=len(frames) - 1, cam_pose=final, visible=last_dets))}
-        for oid in sorted(seen - vis_now):
-            true_cam = to_cam(by_oid[oid]["pos_world"], final)
-            r = recs.get(oid)
-            if r is None or r.in_view_now:
-                feat = [0, 0, 0, 0.0, 0.0, 0.0]
-            else:
-                p = r.pos_cam_now
-                feat = [p[0], p[1], p[2], r.confidence, 0.0, 1.0]
-            X.append(feat); Ypos.append(true_cam)
-            Ydir.append(true_cam / (np.linalg.norm(true_cam) + 1e-9))
-    return np.array(X, np.float32), np.array(Ypos, np.float32), np.array(Ydir, np.float32)
+    for oid in degr["targets"]:
+        true_cam = to_cam(degr["by_oid"][oid]["pos_world"], degr["final"])
+        r = recs.get(oid)
+        if r is None or r.in_view_now:
+            feat = [0, 0, 0, 0.0, 0.0, 0.0]
+        else:
+            p = r.pos_cam_now
+            feat = [p[0], p[1], p[2], r.confidence, 0.0, 1.0]
+        X.append(feat); Ypos.append(true_cam)
+        Ydir.append(true_cam / (np.linalg.norm(true_cam) + 1e-9))
+    return X, Ypos, Ydir
 
 
 def train_eval(Xtr, Ytr, Xte, Yte, normalize_out, metric, seed, epochs=400):
@@ -194,6 +209,8 @@ def main():
     ap.add_argument("--scenes_dir", required=True)
     ap.add_argument("--gate_only", action="store_true")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1])
+    ap.add_argument("--det_noise", type=float, default=0.0, help="Gaussian m on detection pos_cam (H3)")
+    ap.add_argument("--miss_rate", type=float, default=0.0, help="per-frame detection drop prob (H3)")
     args = ap.parse_args()
 
     scene_dirs = sorted(d for d in glob.glob(os.path.join(args.scenes_dir, "*")) if os.path.isdir(d))
@@ -231,22 +248,25 @@ def main():
         return
 
     # ---- recall experiment (split by scene) ----
-    print("\n=== H2 out-of-view recall (real ARKitScenes) ===")
+    tag = "H2" if (args.det_noise == 0 and args.miss_rate == 0) else \
+          f"H3 det_noise={args.det_noise} miss_rate={args.miss_rate}"
+    print(f"\n=== {tag} out-of-view recall (real ARKitScenes) ===")
     for seed in args.seeds:
-        rng = np.random.default_rng(seed)
-        idx = rng.permutation(len(scenes))
+        # degrade each scene ONCE (same degraded detections for all arms; reproducible)
+        deg_rng = np.random.default_rng(1000 + seed)
+        degr = {sc["vid"]: degrade_scene(sc, args.det_noise, args.miss_rate, deg_rng) for sc in scenes}
+        split_rng = np.random.default_rng(seed)
+        idx = split_rng.permutation(len(scenes))
         n_te = max(1, len(scenes) // 3)
         te = [scenes[i] for i in idx[:n_te]]; tr = [scenes[i] for i in idx[n_te:]]
         print(f"\n-- seed {seed}: {len(tr)} train / {len(te)} test scenes --")
         res = {}
         for arm in MEMORIES:
-            # each scene already carries its chosen convention; build per scene
-            Xtr = np.concatenate([build_samples([s], arm, s["conv"])[0] for s in tr]) if tr else np.zeros((0, 6), np.float32)
-            Yp_tr = np.concatenate([build_samples([s], arm, s["conv"])[1] for s in tr])
-            Yd_tr = np.concatenate([build_samples([s], arm, s["conv"])[2] for s in tr])
-            Xte = np.concatenate([build_samples([s], arm, s["conv"])[0] for s in te])
-            Yp_te = np.concatenate([build_samples([s], arm, s["conv"])[1] for s in te])
-            Yd_te = np.concatenate([build_samples([s], arm, s["conv"])[2] for s in te])
+            def stack(split, k):
+                arrs = [np.array(samples_from(arm, degr[s["vid"]])[k], np.float32).reshape(-1, 6 if k == 0 else 3) for s in split]
+                return np.concatenate(arrs) if arrs else np.zeros((0, 6 if k == 0 else 3), np.float32)
+            Xtr, Yp_tr, Yd_tr = stack(tr, 0), stack(tr, 1), stack(tr, 2)
+            Xte, Yp_te, Yd_te = stack(te, 0), stack(te, 1), stack(te, 2)
             wm_s, wm_e = train_eval(Xtr, Yp_tr, Xte, Yp_te, False, "pos", seed)
             vl_s, vl_e = train_eval(Xtr, Yd_tr, Xte, Yd_te, True, "dir", seed)
             res[arm] = dict(ntr=len(Xtr), nte=len(Xte), wm_s=wm_s, wm_e=wm_e, vl_s=vl_s, vl_e=vl_e)
@@ -255,7 +275,7 @@ def main():
         nm, na, eg = res["no-memory"], res["naive"], res["egomem"]
         wm_pass = eg["wm_s"] >= nm["wm_s"] + 0.20 and eg["wm_s"] >= na["wm_s"]
         vl_pass = eg["vl_s"] >= nm["vl_s"] + 0.20 and eg["vl_s"] >= na["vl_s"]
-        print(f"  H2 check: WM {'PASS' if wm_pass else 'FAIL'} | VLA {'PASS' if vl_pass else 'FAIL'} -> "
+        print(f"  check: WM {'PASS' if wm_pass else 'FAIL'} | VLA {'PASS' if vl_pass else 'FAIL'} -> "
               f"{'CONFIRMED' if (wm_pass and vl_pass) else 'REJECTED'}")
 
 

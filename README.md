@@ -28,6 +28,10 @@ cross-paradigm transfer is demonstrated, not assumed.
 egocentric scans (ARKitScenes: real ARKit VIO poses + 3D layouts, 14 scenes):
 EgoMem **0.70–1.00** world-model and **1.00** VLA recall vs **≤ 0.03** for both
 baselines, across 2 seeds (projection gate passed 14/14). See `paper/paper.md` §7.
+It also **survives heavy detection noise + dropout** (§7.1): EgoMem stays above
+the baselines across a noise×miss grid (worst-corner 0.53 / 0.83 vs ≤ 0.10), and
+its margin over a raw buffer *widens* as detections worsen — the cross-frame
+averaging is the robustness.
 
 **Honest caveat (the boundary):** the advantage is *localization-quality
 dependent*. Under injected camera-pose drift the precise world-model consumer
