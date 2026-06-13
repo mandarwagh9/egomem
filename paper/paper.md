@@ -426,6 +426,20 @@ better perception is the only remedy.
 
 ## 8. Limitations
 
+- **Real perception front-end (attempted, blocked).** We built an end-to-end
+  real-perception pipeline (`arkit_detector.py`): a real COCO detector on the RGB
+  frames + real LiDAR depth + intrinsics + ARKit pose, back-projected to world
+  points with spatial association — no oracle positions or ids. The detector,
+  depth, intrinsics, and back-projection are individually verified, but a
+  back-projection **validation gate** revealed that the released 3dod box
+  annotations sit in a different coordinate frame than the `lowres_wide`
+  trajectory (real detections miss the GT centroids by ≥ 2.5 m under every sign
+  convention). Rather than fit a transform from detection↔GT correspondences
+  (which would be circular), we report this as blocked pending the official
+  annotation→trajectory alignment. The §5–§7.5 results are unaffected: their
+  detections are projections of the same annotated centroids through the real
+  poses, so they are self-consistent tests of the memory mechanism under real
+  egomotion regardless of the annotations' absolute frame.
 - **Substrate & perception.** The core §5–§6 study is a geometric egomotion
   simulator with exact ground truth; §7 uses real ARKitScenes data (real VIO
   poses, real layouts). The oracle-perception gap is now mostly characterized

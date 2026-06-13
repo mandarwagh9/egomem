@@ -180,10 +180,29 @@ but-inconsistent id → spatial re-association. Median agg, majority-vote id.
 - Only extreme cells (assoc 0.5, noise 0.25) remain split — all variants degrade;
   better perception is the only remedy there.
 
-### Next (Cycle 8, optional — not started)
-Real perception front-end (open-vocab detector + monocular depth + tracker) on the
-ARKitScenes RGB/depth frames at larger scale (GPU), now that §7.1–§7.5 give the
-accuracy/recall/association envelope it must meet.
+**CYCLE 8 — H8 STATUS: BLOCKED (real perception front-end; evaluation blocked).**
+
+### H8 attempt (2026-06-14): real detector + real depth, no oracle positions
+Built `arkit_detector.py` (CPU): real torchvision Faster R-CNN (COCO) on real RGB
++ real LiDAR depth + intrinsics + ARKit pose → world points, spatial association,
+with a back-projection validation gate. Detector + depth + backprojection all
+verified sound (detector fires on the right furniture; depth mm verified to ~6 m;
+intrinsics match 256×192; math norm-consistent).
+- **BLOCKED:** the **3dod OBB annotation frame ≠ `lowres_wide.traj` frame** (GT
+  sofa x=1.56 outside camera x-range [−3,0.04]; real detections miss GT by ≥2.48 m
+  median under all 4 sign conventions). The gate (built to prevent fake numbers)
+  caught it. Did NOT fit a transform from correspondences (circular). No fabricated
+  recall number reported. See `research/hypothesis_h8.md`.
+- **Unblock:** apply the official ARKitScenes annotation→trajectory SE(3) transform,
+  then the gate should pass and recall is measurable.
+- **H2–H7 unaffected:** they are self-consistent (detections = `to_cam(centroid,
+  pose)`; metric compares identically-computed quantities) — a valid test of the
+  memory mechanism on real trajectories + relative geometry, independent of the
+  annotation's absolute frame.
+
+### Next (when resumed)
+Resolve the ARKitScenes annotation-frame transform (official `threedod` utils),
+re-run H8 through the gate; optionally scale to more scenes (GPU available).
 
 (Cycle-1 history below.)
 
@@ -265,6 +284,23 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-14 — H8 real perception front-end attempted; BLOCKED on annotation frame
+- **Did:** Built `arkit_detector.py` — real torchvision detector (COCO, fires on the
+  right furniture) + real ARKitScenes LiDAR depth + intrinsics + ARKit pose →
+  back-projected world points + spatial association + a back-projection validation
+  gate. Verified detector/depth/intrinsics/backproj math all sound.
+- **Result:** **BLOCKED.** The 3dod OBB annotations are in a different coordinate
+  frame than `lowres_wide.traj` (GT outside camera extent; real detections miss GT
+  by ≥2.48 m under all conventions). The validation gate caught it and refused to
+  emit numbers — exactly its purpose. No fabricated number. Unblock = official
+  ARKitScenes annotation→trajectory transform.
+- **Finding:** integrity check held; H2–H7 remain valid (self-consistent). The real
+  detector + real depth machinery is built and ready once the frame transform is
+  applied. STATUS: BLOCKED (not a failure of the method — a dataset-alignment gap).
+- **Next task:** resolve the annotation frame transform, re-run H8.
+- **Blocker:** ARKitScenes 3dod annotation↔trajectory SE(3) transform (need official
+  threedod alignment util / per-visit transform).
 
 ### 2026-06-14 — H7: trust-but-verify resolves the tradeoff; shipped (Cycle 7 COMPLETE)
 - **Did:** Prototyped `EgoMemVerify` (trust-but-verify association) as a 6th arm;
@@ -558,5 +594,9 @@ Cycle 7 (trust-but-verify, 2026-06-14): **`EgoMemVerify` RESOLVES the tradeoff**
 identical to mean on clean data, best under id-swaps, a strict Pareto improvement;
 shipped as the recommended aggregator (lib v0.3.0, paper §7.5).
 
-Optional future (Cycle 8): real perception front-end (detector + monocular depth +
-tracker) at larger scale (GPU); §7.1–§7.5 give the envelope it must meet.
+Cycle 8 (real perception, 2026-06-14): real detector + real LiDAR depth pipeline
+BUILT and validated (`arkit_detector.py`), but end-to-end eval **BLOCKED** — the
+3dod annotations are in a different frame than the trajectory; the validation gate
+caught it and no number was faked. Unblock = official annotation→trajectory transform.
+
+Optional future: resolve that SE(3) transform, re-run H8, scale to more scenes (GPU).
