@@ -54,7 +54,58 @@ class EgoMemRobust:
         return list(out.values())
 
 
-MEMORIES = {"no-memory": NoMemory, "naive": NaiveBuffer, "egomem": EgoMem, "egomem-robust": EgoMemRobust}
+class EgoMemAssoc:
+    """H6 prototype: explicit spatial data association. Ignores the (possibly
+    wrong) incoming track id; routes each detection to the nearest existing
+    world-space track within a gating radius (else spawns one), aggregates each
+    track's positions by median, and labels each track by MAJORITY incoming id
+    (identity voted over the track's lifetime). Robust to id swaps because the true
+    position routes the detection to the right cluster and the majority recovers
+    the id; can mis-route when detection noise exceeds inter-object spacing."""
+    def __init__(self, gate_radius=1.0, default_conf=0.5):
+        self.tracks = []
+        self.gate_radius = gate_radius
+        self.default_conf = default_conf
+
+    @staticmethod
+    def _est(tr):
+        return np.median(np.array(tr["poss"]), axis=0)
+
+    def write(self, obs):
+        for d in obs.detections:
+            Pw = to_world(d.pos_cam, obs.cam_pose)
+            best, bestd = None, self.gate_radius
+            for tr in self.tracks:
+                dist = float(np.linalg.norm(self._est(tr) - Pw))
+                if dist < bestd:
+                    bestd, best = dist, tr
+            if best is None:
+                best = dict(poss=[], votes={}, cats={}, last_seen_t=obs.t)
+                self.tracks.append(best)
+            best["poss"].append(Pw)
+            best["votes"][d.key()] = best["votes"].get(d.key(), 0) + 1
+            best["cats"][d.category] = best["cats"].get(d.category, 0) + 1
+            best["last_seen_t"] = obs.t
+
+    def query(self, state):
+        out = {d.key(): RecalledObject(d.key(), d.category, np.asarray(d.pos_cam, float),
+                                       state.t, d.confidence, True) for d in state.visible}
+        vis = set(out)
+        for tr in self.tracks:
+            vid = max(tr["votes"], key=tr["votes"].get)        # majority-voted identity
+            if vid in vis:
+                continue
+            cat = max(tr["cats"], key=tr["cats"].get)
+            med = self._est(tr)
+            R, c = state.cam_pose[:3, :3], state.cam_pose[:3, 3]
+            rec = RecalledObject(vid, cat, R.T @ (med - c), tr["last_seen_t"], self.default_conf, False)
+            if vid not in out or len(tr["poss"]) > 0:           # prefer the most-observed track for an id
+                out[vid] = rec
+        return list(out.values())
+
+
+MEMORIES = {"no-memory": NoMemory, "naive": NaiveBuffer, "egomem": EgoMem,
+            "egomem-robust": EgoMemRobust, "egomem-assoc": EgoMemAssoc}
 SUBSAMPLE = 20
 MAX_RANGE = 8.0
 
@@ -325,7 +376,7 @@ def main():
             wp = a["wm_s"] >= nm["wm_s"] + 0.20 and a["wm_s"] >= na["wm_s"]
             vp = a["vl_s"] >= nm["vl_s"] + 0.20 and a["vl_s"] >= na["vl_s"]
             return wp, vp
-        for arm in ("egomem", "egomem-robust"):
+        for arm in ("egomem", "egomem-robust", "egomem-assoc"):
             if arm in res:
                 wp, vp = gate(arm)
                 print(f"  {arm} check: WM {'PASS' if wp else 'FAIL'} | VLA {'PASS' if vp else 'FAIL'} -> "

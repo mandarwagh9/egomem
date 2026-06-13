@@ -361,9 +361,38 @@ operating point** (detection noise + dropout + 20 % swaps), which mean-EgoMem
 fails. It does *not* fully fix pure heavy association error (assoc 0.5 still
 rejected; assoc 0.2 still one-seed-unstable) — so the strict H5 claim (full
 restoration at assoc 0.2) is not met, but robust aggregation is a clear, free
-improvement and is shipped as `EgoMemRobust`. Closing the remaining gap needs
-explicit association handling (multi-hypothesis ids, appearance gating), left to
-future work.
+improvement and is shipped as `EgoMemRobust`. Closing the remaining gap motivates
+explicit association handling, prototyped next.
+
+### 7.4 Explicit spatial association: a regime tradeoff (prototype)
+
+The median fixes outlier *positions* but not the root cause (wrong *ids*). We
+prototype `EgoMemAssoc`: it ignores the incoming id, routes each detection to the
+nearest world-space track within a gating radius (1 m), aggregates by median, and
+labels each track by majority-voted id. Table 7 (2-seed mean WM / VLA).
+
+**Table 7. Aggregator comparison across regimes (real ARKitScenes, 2-seed mean).**
+
+| Condition | mean | median | spatial-assoc | best (gate) |
+|---|---|---|---|---|
+| clean (0,0,0) | 0.85 / 1.00 | 0.85 / 1.00 | 0.55 / 0.70 | mean = median (assoc regresses) |
+| assoc 0.2 | 0.22 / 0.46 | 0.38 / 0.57 | 0.37 / 0.52 | **assoc** (only one CONFIRMED both seeds) |
+| assoc 0.5 | 0.03 / 0.23 | 0.16 / 0.32 | 0.20 / 0.33 | assoc (still split) |
+| noise 0.10 + miss 0.3 + assoc 0.2 | 0.11 / 0.33 | 0.28 / 0.53 | 0.19 / 0.42 | **median** (assoc split) |
+| noise 0.25 + assoc 0.2 | 0.28 / 0.62 | 0.28 / 0.67 | 0.25 / 0.61 | median (all split) |
+
+**This is a regime tradeoff with no universal winner — reported honestly.** Spatial
+association *uniquely* clears the gate under **pure** association error (assoc 0.2,
+both seeds) — the root-cause fix works on the root-cause failure. But re-deriving
+identity is not free: it **regresses clean data** (the 1 m gate occasionally
+mis-routes correctly-id'd detections) and is **beaten by the median once detection
+noise is high** (noise shifts detections across gates, the very mechanism that
+helps under clean swaps). The practical guidance is therefore: choose the
+aggregator by the dominant error — **median when detection-noise-limited, spatial
+association when id-swap-limited**. A noise-aware / appearance-gated hybrid that
+gets both is the clear next step. Because it regresses clean performance,
+`EgoMemAssoc` is kept as a prototype, **not** shipped as a default (unlike the
+free median §7.3).
 
 ## 8. Limitations
 
@@ -414,12 +443,16 @@ association error** (§7.2, a reported negative result): correct object-identity
 tracking is the binding constraint, because per-id averaging propagates a wrong
 id's position rather than cancelling it. A drop-in **median aggregator**
 (`EgoMemRobust`, §7.3) partially mitigates this — free on clean data, strictly
-better under swaps, and enough to recover the realistic combined operating point —
-though heavy association error still needs explicit handling. We release EgoMem
-(both aggregators) as an installable library and CLI that reproduces every number
-reported here, as the buyer-side, neutral memory the literature has not yet
-offered. The clearest next steps are stronger association handling and a real
-perception front-end (detector + monocular depth + tracking) at larger scale.
+better under swaps, and enough to recover the realistic combined operating point.
+An explicit **spatial-association** prototype (§7.4) uniquely fixes *pure*
+association error but regresses clean data and loses to the median under high
+detection noise — a **regime tradeoff with no universal aggregator**: pick by the
+dominant error (median when detection-noise-limited, spatial association when
+id-swap-limited). We release EgoMem (mean + median aggregators) as an installable
+library and CLI that reproduces every number reported here, as the buyer-side,
+neutral memory the literature has not yet offered. The clearest next step is a
+noise-aware / appearance-gated hybrid that gets both, then a real perception
+front-end (detector + monocular depth + tracking) at larger scale.
 
 ## References
 

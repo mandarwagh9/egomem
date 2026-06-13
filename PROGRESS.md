@@ -150,10 +150,25 @@ reproduction is unchanged — verified `egomem sim --seed 0` identical).
   one-seed-unstable) → strict H5 not met, but a clear free win → shipped. 6 RESULTS
   rows; `stdout_h5.log`; paper §7.3 + abstract/conclusion.
 
-### Next (Cycle 6, optional — not started)
-Explicit association handling (multi-hypothesis ids / appearance gating) to close
-the heavy-assoc gap; and/or a real perception front-end (detector + monocular depth
-+ tracker) at larger scale (GCP+GPU), meeting the §7.1 envelope AND §7.2 assoc bar.
+**CYCLE 6 COMPLETE — H6 partial (regime tradeoff); EgoMemAssoc prototype, NOT shipped.**
+Paper §7.4 (Table 7).
+
+### H6 result (explicit spatial association, 2026-06-14)
+Prototyped `EgoMemAssoc` (ignore incoming id; nearest-track gating @1 m; median agg;
+majority-vote id) in the loader (5th arm). Swept clean + assoc + combined + high-noise.
+- **Spatial assoc UNIQUELY clears the gate under pure assoc 0.2 (both seeds)** —
+  where mean (H4) and median (H5) both failed. Root-cause fix works on root cause.
+- **But regresses clean data** (WM 0.55 vs 0.85 — 1 m gate mis-routes some correct
+  ids) and **loses to median under high detection noise** (noise shifts dets across
+  gates). **No universal winner — regime tradeoff:** median if detection-noise-
+  limited, spatial-assoc if id-swap-limited. 10 RESULTS rows; `stdout_h6.log`.
+- **NOT shipped** (regresses clean) — kept as documented prototype; a noise-aware/
+  appearance-gated hybrid is the real fix. Paper §7.4 + conclusion.
+
+### Next (Cycle 7, optional — not started)
+Noise-aware / appearance-gated **hybrid** aggregator (median+association, gating
+scaled to detection-noise & inter-object spacing) to win both regimes; and/or a
+real perception front-end (detector + monocular depth + tracker) at larger scale (GPU).
 
 (Cycle-1 history below.)
 
@@ -235,6 +250,19 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-14 — H6 regime tradeoff: spatial association prototype (Cycle 6 COMPLETE)
+- **Did:** Prototyped `EgoMemAssoc` (spatial nearest-track gating + majority-vote id)
+  as a 5th arm; swept clean/assoc0.2/assoc0.5/combined/high-noise, 2 seeds; logged
+  `stdout_h6.log`; 10 RESULTS rows; paper §7.4 (Table 7) + conclusion.
+- **Result:** Spatial assoc UNIQUELY passes pure assoc0.2 (both seeds) where mean &
+  median failed; but REGRESSES clean (0.55 vs 0.85 WM) and loses to median under
+  high detection noise. No universal aggregator → pick by dominant error.
+- **Finding:** Root-cause association fix works on pure id-swaps but isn't free;
+  detection-noise vs id-swap regimes favor different aggregators → noise-aware hybrid
+  is the real answer. NOT shipped (regresses clean); documented prototype. Six cycles.
+- **Next task:** none in-loop (Cycle 7 optional: hybrid aggregator).
+- **Blocker:** none.
 
 ### 2026-06-14 — H5 partial mitigation: EgoMemRobust shipped (Cycle 5 COMPLETE)
 - **Did:** Prototyped median per-id aggregator in the loader (4th arm), swept clean
@@ -464,7 +492,7 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ---
 
-STATUS: CYCLES 1–5 COMPLETE
+STATUS: CYCLES 1–6 COMPLETE
 
 Cycle 1 (synthetic, 2026-06-13): EgoMem invented, validated (3-seed defended
 result with a characterized pose-drift failure boundary), packaged as an
@@ -495,5 +523,9 @@ Cycle 5 (mitigation, 2026-06-14): `EgoMemRobust` (per-id median) shipped — fre
 clean data, strictly better under association error, recovers the realistic
 operating point (paper §7.3). Heavy pure association error still open.
 
-Optional future (Cycle 6): explicit association handling (multi-hypothesis ids);
-real detector + monocular depth + tracker at larger scale (GPU).
+Cycle 6 (spatial association, 2026-06-14): `EgoMemAssoc` prototype — uniquely fixes
+pure association error but regresses clean data and loses to median under high
+detection noise (regime tradeoff, no universal aggregator). Not shipped (paper §7.4).
+
+Optional future (Cycle 7): noise-aware/appearance-gated hybrid aggregator; real
+detector + monocular depth + tracker at larger scale (GPU).
