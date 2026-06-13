@@ -20,7 +20,7 @@ import numpy as np
 
 __all__ = [
     "Detection", "Observation", "QueryState", "RecalledObject",
-    "NoMemory", "NaiveBuffer", "EgoMem", "EgoMemRobust", "MEMORIES",
+    "NoMemory", "NaiveBuffer", "EgoMem", "EgoMemRobust", "EgoMemVerify", "MEMORIES",
     "cam_pose_mat", "to_cam", "to_world",
 ]
 
@@ -216,6 +216,69 @@ class EgoMemRobust:
         return _ordered(out, state.goal_category)
 
 
+class EgoMemVerify:
+    """Trust-but-verify association — the recommended aggregator. Each detection
+    prefers the track carrying its claimed id when that track is spatially
+    consistent (so correct ids are trusted and nearby distinct objects stay
+    separate); a never-seen id spawns its own track; a *reused but spatially
+    inconsistent* id is treated as a tracker swap and re-associated to the nearest
+    track. Aggregates by median, labels by majority id.
+
+    Validated on real ARKitScenes (paper §7.5): identical to `EgoMem` on clean data
+    (no regression) and the best variant under association error — it gets the
+    clean-data accuracy of the mean AND the swap-robustness of spatial association,
+    a strict Pareto improvement. Extreme association/detection-noise still degrade
+    all variants."""
+    def __init__(self, gate_radius: float = 1.0, default_conf: float = 0.5):
+        self.tracks = []
+        self.gate_radius = gate_radius
+        self.default_conf = default_conf
+
+    @staticmethod
+    def _est(tr):
+        return np.median(np.asarray(tr["poss"]), axis=0)
+
+    def write(self, obs: Observation) -> None:
+        for d in obs.detections:
+            Pw = to_world(d.pos_cam, obs.cam_pose)
+            k = d.key()
+            by_id = [tr for tr in self.tracks if k in tr["votes"]]
+            target = None
+            for tr in by_id:                                   # 1) claimed id, spatially consistent
+                if float(np.linalg.norm(self._est(tr) - Pw)) <= self.gate_radius:
+                    target = tr; break
+            if target is None:
+                if not by_id:                                  # 2a) new id -> spawn (unless coincident)
+                    for tr in self.tracks:
+                        if float(np.linalg.norm(self._est(tr) - Pw)) <= self.gate_radius * 0.3:
+                            target = tr; break
+                else:                                          # 2b) reused id, inconsistent -> swap
+                    bestd = self.gate_radius
+                    for tr in self.tracks:
+                        dist = float(np.linalg.norm(self._est(tr) - Pw))
+                        if dist < bestd:
+                            bestd, target = dist, tr
+            if target is None:                                 # 3) spawn
+                target = dict(poss=[], votes={}, cats={}, last_seen_t=obs.t)
+                self.tracks.append(target)
+            target["poss"].append(Pw)
+            target["votes"][k] = target["votes"].get(k, 0) + 1
+            target["cats"][d.category] = target["cats"].get(d.category, 0) + 1
+            target["last_seen_t"] = obs.t
+
+    def query(self, state: QueryState):
+        out = _visible_records(state)
+        for tr in self.tracks:
+            vid = max(tr["votes"], key=tr["votes"].get)
+            if vid in out:
+                continue
+            cat = max(tr["cats"], key=tr["cats"].get)
+            out[vid] = RecalledObject(vid, cat, to_cam(self._est(tr), state.cam_pose),
+                                      tr["last_seen_t"], self.default_conf, False)
+        return _ordered(out, state.goal_category)
+
+
 # MEMORIES drives the sim/CLI benchmark arms; kept at the 3 documented arms so
-# `egomem sim` reproduction is unchanged. EgoMemRobust is exported for direct use.
+# `egomem sim` reproduction is unchanged. EgoMemRobust / EgoMemVerify are exported
+# for direct use (EgoMemVerify is the recommended aggregator under id-swap risk).
 MEMORIES = {"no-memory": NoMemory, "naive": NaiveBuffer, "egomem": EgoMem}

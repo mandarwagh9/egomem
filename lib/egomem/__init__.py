@@ -6,14 +6,14 @@ Public API:
 """
 from .memory import (
     Detection, Observation, QueryState, RecalledObject,
-    NoMemory, NaiveBuffer, EgoMem, EgoMemRobust, MEMORIES,
+    NoMemory, NaiveBuffer, EgoMem, EgoMemRobust, EgoMemVerify, MEMORIES,
     cam_pose_mat, to_cam, to_world,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "Detection", "Observation", "QueryState", "RecalledObject",
-    "NoMemory", "NaiveBuffer", "EgoMem", "EgoMemRobust", "MEMORIES",
+    "NoMemory", "NaiveBuffer", "EgoMem", "EgoMemRobust", "EgoMemVerify", "MEMORIES",
     "cam_pose_mat", "to_cam", "to_world", "__version__",
 ]

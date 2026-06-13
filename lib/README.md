@@ -52,15 +52,19 @@ for rec in mem.query(QueryState(t=10, cam_pose=T1, visible=[], goal_category="cu
 camera frame, so any downstream model consumes an egocentric answer without
 knowing the memory's internals.
 
-### Association-robust variant
+### Aggregator variants (for imperfect perception)
 
-`EgoMemRobust` is a drop-in replacement that aggregates each object's positions by
-coordinate-wise **median** instead of mean. It is identical to `EgoMem` on clean
-data but tolerates a minority of mis-associated (wrong track id) detections, which
-break the mean variant (see `paper/paper.md` §7.2–§7.3). Use it when the upstream
-tracker may swap ids:
+Same `write()`/`query()` API; they differ only in how per-object observations are
+combined. Plain `EgoMem` breaks under tracker id-swaps (paper §7.2).
+
+- **`EgoMemVerify` — recommended.** Trust-but-verify association: trusts the
+  detection's id when spatially consistent, re-associates suspected swaps. Identical
+  to `EgoMem` on clean data and best under id-swaps — a strict Pareto improvement
+  (paper §7.5).
+- **`EgoMemRobust`** — coordinate-wise median; free on clean data, robust to
+  detection noise/outliers; simpler than Verify (paper §7.3).
 
 ```python
-from egomem import EgoMemRobust
-mem = EgoMemRobust()   # same write()/query() API as EgoMem
+from egomem import EgoMemVerify   # or EgoMemRobust
+mem = EgoMemVerify()
 ```

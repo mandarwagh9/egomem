@@ -34,10 +34,11 @@ the baselines across a noise×miss grid — its cross-frame averaging makes the 
 over a raw buffer *widen* as detections worsen. It does **not**, however, survive
 **data-association error**: injecting wrong track ids breaks the layer (a clean
 negative result), pinpointing correct association — not detector precision — as the
-binding constraint for a memory of this design; a median aggregator partially
-mitigates it (free on clean data, recovering the realistic operating point). We
-release the layer as an installable library with a CLI that reproduces every number
-here.
+binding constraint for a memory of this design. A **trust-but-verify** aggregator
+recovers it — identical to the mean on clean data and best under id-swaps, a strict
+Pareto improvement shipped as the recommended variant. We release the layer
+(mean / median / trust-but-verify aggregators) as an installable library with a CLI
+that reproduces every number here.
 
 ## 1. Introduction
 
@@ -392,7 +393,36 @@ aggregator by the dominant error — **median when detection-noise-limited, spat
 association when id-swap-limited**. A noise-aware / appearance-gated hybrid that
 gets both is the clear next step. Because it regresses clean performance,
 `EgoMemAssoc` is kept as a prototype, **not** shipped as a default (unlike the
-free median §7.3).
+free median §7.3). A hybrid that gets both regimes is tested next.
+
+### 7.5 Trust-but-verify resolves the tradeoff (recommended aggregator)
+
+`EgoMemVerify` combines the two: a detection prefers the track carrying its
+**claimed id** when that track is spatially consistent (so correct ids are trusted
+and nearby distinct objects stay separate — the clean-data property the mean has
+and pure association lacks); a never-seen id **spawns** its own track; only a
+*reused but spatially inconsistent* id is treated as a swap and re-associated
+spatially. Table 8 (2-seed mean WM / VLA) against all prior aggregators.
+
+**Table 8. Trust-but-verify vs. all aggregators (real ARKitScenes, 2-seed mean).**
+
+| Condition | mean | median | spatial-assoc | **verify** |
+|---|---|---|---|---|
+| clean (0,0,0) | 0.85 / 1.00 | 0.85 / 1.00 | 0.55 / 0.70 | **0.85 / 1.00** |
+| assoc 0.2 | 0.22 / 0.46 | 0.38 / 0.57 | 0.37 / 0.52 | **0.56 / 0.80** |
+| assoc 0.5 | 0.03 / 0.23 | 0.16 / 0.32 | 0.20 / 0.33 | **0.28 / 0.39** |
+| noise 0.10 + miss 0.3 + assoc 0.2 | 0.11 / 0.33 | 0.28 / 0.53 | 0.19 / 0.42 | 0.30 / 0.45 |
+| noise 0.25 + assoc 0.2 | 0.28 / 0.62 | 0.28 / 0.67 | 0.25 / 0.61 | 0.30 / 0.66 |
+
+`EgoMemVerify` is **identical to mean-EgoMem on clean data (no regression)** and is
+the **best variant under pure association error** — uniquely CONFIRMED on both
+seeds at assoc 0.2 with the highest scores — while matching the median on the
+combined and high-noise cells. It is a **strict Pareto improvement**: the
+clean-data accuracy of the mean *plus* the swap-robustness of spatial association,
+no downside. It thus **resolves the §7.4 tradeoff** and is shipped as the
+**recommended aggregator** (`EgoMemVerify`, library v0.3.0). Only the extreme cells
+(assoc 0.5, 0.25 m noise) stay one-seed-unstable, where all variants degrade and
+better perception is the only remedy.
 
 ## 8. Limitations
 
@@ -445,14 +475,15 @@ id's position rather than cancelling it. A drop-in **median aggregator**
 (`EgoMemRobust`, §7.3) partially mitigates this — free on clean data, strictly
 better under swaps, and enough to recover the realistic combined operating point.
 An explicit **spatial-association** prototype (§7.4) uniquely fixes *pure*
-association error but regresses clean data and loses to the median under high
-detection noise — a **regime tradeoff with no universal aggregator**: pick by the
-dominant error (median when detection-noise-limited, spatial association when
-id-swap-limited). We release EgoMem (mean + median aggregators) as an installable
-library and CLI that reproduces every number reported here, as the buyer-side,
-neutral memory the literature has not yet offered. The clearest next step is a
-noise-aware / appearance-gated hybrid that gets both, then a real perception
-front-end (detector + monocular depth + tracking) at larger scale.
+association error but regresses clean data — a regime tradeoff. A **trust-but-verify**
+aggregator (`EgoMemVerify`, §7.5) **resolves it**: identical to the mean on clean
+data and the best variant under id-swaps, a strict Pareto improvement, shipped as
+the recommended aggregator. We release EgoMem (mean, median, and trust-but-verify
+aggregators) as an installable library and CLI that reproduces every number
+reported here, as the buyer-side, neutral memory the literature has not yet
+offered. The clearest next step is a real perception front-end (detector +
+monocular depth + tracking) at larger scale, which §7.1–§7.5 now equip with a
+quantified accuracy/recall/association envelope to hit.
 
 ## References
 

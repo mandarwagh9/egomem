@@ -104,8 +104,76 @@ class EgoMemAssoc:
         return list(out.values())
 
 
+class EgoMemVerify:
+    """H7 prototype: trust-but-verify association (hybrid of EgoMem and EgoMemAssoc).
+    Prefer the track whose majority id == the detection's claimed id IF it is
+    spatially consistent (within gate) -> keeps clean-data accuracy and keeps nearby
+    distinct objects separate (the claimed id disambiguates). Otherwise the claimed
+    id is suspect (a swap): fall back to the nearest track within gate, else spawn.
+    Aggregate by median, label by majority id. Aims to win both regimes:
+    detection-noise-limited (trust ids) and id-swap-limited (verify spatially)."""
+    def __init__(self, gate_radius=1.0, default_conf=0.5):
+        self.tracks = []
+        self.gate_radius = gate_radius
+        self.default_conf = default_conf
+
+    @staticmethod
+    def _est(tr):
+        return np.median(np.array(tr["poss"]), axis=0)
+
+    @staticmethod
+    def _maj(tr):
+        return max(tr["votes"], key=tr["votes"].get)
+
+    def write(self, obs):
+        for d in obs.detections:
+            Pw = to_world(d.pos_cam, obs.cam_pose)
+            k = d.key()
+            by_id = [tr for tr in self.tracks if k in tr["votes"]]   # tracks that have seen this id
+            target = None
+            # 1) claimed id, spatially consistent -> trust it (keeps nearby objects separate)
+            for tr in by_id:
+                if float(np.linalg.norm(self._est(tr) - Pw)) <= self.gate_radius:
+                    target = tr; break
+            if target is None:
+                if not by_id:
+                    # claimed id never seen -> a (claimed) new object: spawn, UNLESS nearly
+                    # coincident with an existing track (a re-detection of the same object)
+                    for tr in self.tracks:
+                        if float(np.linalg.norm(self._est(tr) - Pw)) <= self.gate_radius * 0.3:
+                            target = tr; break
+                else:
+                    # claimed id seen but far from its track -> suspected swap: verify spatially
+                    bestd = self.gate_radius
+                    for tr in self.tracks:
+                        dist = float(np.linalg.norm(self._est(tr) - Pw))
+                        if dist < bestd:
+                            bestd, target = dist, tr
+            if target is None:
+                target = dict(poss=[], votes={}, cats={}, last_seen_t=obs.t)
+                self.tracks.append(target)
+            target["poss"].append(Pw)
+            target["votes"][k] = target["votes"].get(k, 0) + 1
+            target["cats"][d.category] = target["cats"].get(d.category, 0) + 1
+            target["last_seen_t"] = obs.t
+
+    def query(self, state):
+        out = {d.key(): RecalledObject(d.key(), d.category, np.asarray(d.pos_cam, float),
+                                       state.t, d.confidence, True) for d in state.visible}
+        vis = set(out)
+        for tr in self.tracks:
+            vid = self._maj(tr)
+            if vid in vis:
+                continue
+            cat = max(tr["cats"], key=tr["cats"].get)
+            med = self._est(tr)
+            R, c = state.cam_pose[:3, :3], state.cam_pose[:3, 3]
+            out[vid] = RecalledObject(vid, cat, R.T @ (med - c), tr["last_seen_t"], self.default_conf, False)
+        return list(out.values())
+
+
 MEMORIES = {"no-memory": NoMemory, "naive": NaiveBuffer, "egomem": EgoMem,
-            "egomem-robust": EgoMemRobust, "egomem-assoc": EgoMemAssoc}
+            "egomem-robust": EgoMemRobust, "egomem-assoc": EgoMemAssoc, "egomem-verify": EgoMemVerify}
 SUBSAMPLE = 20
 MAX_RANGE = 8.0
 
@@ -376,7 +444,7 @@ def main():
             wp = a["wm_s"] >= nm["wm_s"] + 0.20 and a["wm_s"] >= na["wm_s"]
             vp = a["vl_s"] >= nm["vl_s"] + 0.20 and a["vl_s"] >= na["vl_s"]
             return wp, vp
-        for arm in ("egomem", "egomem-robust", "egomem-assoc"):
+        for arm in ("egomem", "egomem-robust", "egomem-assoc", "egomem-verify"):
             if arm in res:
                 wp, vp = gate(arm)
                 print(f"  {arm} check: WM {'PASS' if wp else 'FAIL'} | VLA {'PASS' if vp else 'FAIL'} -> "
