@@ -68,28 +68,52 @@ defended-result writeup. Revisit if compute proves cheaper/dearer than expected.
 
 ## CURRENT PHASE = 1 (RESEARCH)
 
-### Next single task
-Build the **lit map**: survey the named research bridges and the surrounding
-work, then write `research/landscape.md`. Concretely, in one bounded run:
-- Use the `deep-research` skill (or WebSearch + WebFetch) to find and verify
-  REAL sources on: (a) Embodied VideoAgent / persistent scene memory from
-  egocentric video; (b) memory inside VLAs (e.g. memory-augmented policies);
-  (c) memory inside world models (e.g. recurrent/latent-memory world models);
-  (d) egocentric human-video datasets in LeRobot v3 format.
-- For each, capture: what memory mechanism it uses, whether it is model-bound or
-  model-agnostic, and what substrate feeds it.
-- Write `research/landscape.md` with a sources table; add every verified source
-  (with a working link) to `BIBLIOGRAPHY.md`.
-- Do NOT write the hypothesis yet — that is the run AFTER the landscape exists.
+### Next single task — write the gap statement + `research/hypothesis.md`
+`research/landscape.md` now exists (7 verified sources). In one bounded run:
+1. Write the **one-paragraph gap statement** (can live at the top of
+   `hypothesis.md`). It is already strongly evidenced by the lit map: memory is
+   always bound to one consumer paradigm; the best "agnostic" claim is
+   intra-VLA only (MAP-VLA); world-model memory is internal/inseparable;
+   egocentric human video is fed to LLM-agents/generative models, never to a
+   neutral memory a controller consumes.
+2. Write **`research/hypothesis.md`** — ONE falsifiable hypothesis with:
+   - a **named metric** (e.g. long-horizon task success rate, or
+     retrieval-conditioned next-state prediction error),
+   - a **numeric threshold** (e.g. "≥ X points over no-memory baseline"),
+   - the **transfer claim** (the same memory, written once, improves BOTH a
+     world-model consumer AND a VLA consumer without retraining the memory),
+   - and an explicit **falsifier** (what observed result would kill it).
+   Keep the metric measurable on small/sample data and modest hardware — the
+   experiment in Phase 3 must actually run.
+Committing `hypothesis.md` meets the **Phase 1 EXIT** → advance to Phase 2 next.
 
-### After that (phase 1 remaining)
-Once `research/landscape.md` exists: write the one-paragraph gap statement, then
-write `research/hypothesis.md` (metric + threshold + falsifier). That satisfies
-the phase-1 EXIT and advances to phase 2.
+### Constraints to respect when writing the hypothesis
+- One claim only; do not bundle two. Pick the single sharpest testable one.
+- It must be falsifiable on hardware we actually have (assume CPU / a single
+  modest GPU at most until proven otherwise) and on a *small* slice of an
+  egocentric dataset — verify dataset availability in Phase 2, not now.
 
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-13 — Lit map built
+- **Did:** Ran targeted WebSearch + WebFetch across the 4 areas. Fetched and
+  read 7 real sources; wrote `research/landscape.md` (sources table +
+  per-area synthesis + the cross-field pattern) and added all 7 to
+  `BIBLIOGRAPHY.md` with working links. Marked 6 surfaced-but-unopened titles as
+  *unverified leads* (kept out of the bibliography).
+- **Finding (the pattern that justifies the mission):** memory in the literature
+  is ALWAYS bound to one consumer paradigm — LLM-agent (Embodied VideoAgent),
+  VLA (MAP-VLA, MEM), or world-model latent state (Dreamer/RSSM). The strongest
+  "model-agnostic" result is *intra-VLA only* (MAP-VLA = plug-and-play on a
+  frozen VLA); cross-paradigm neutrality (VLA **and** world model) is absent.
+  Egocentric human video + depth + pose is used (Embodied VideoAgent, MEgoHand)
+  but only feeds LLM-agents/generative models, never a neutral memory a
+  controller consumes. LeRobot v3 is a ready neutral container. → The mission's
+  seam is real and unoccupied.
+- **Next task:** Write the gap statement + `research/hypothesis.md` (see above).
+- **Blocker:** none.
 
 ### 2026-06-13 — Bootstrap
 - **Did:** No prior project existed for this mission anywhere under
