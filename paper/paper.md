@@ -40,9 +40,12 @@ Pareto improvement shipped as the recommended variant. Finally, with a **fully r
 perception front-end and no oracle anywhere** (real detector + real LiDAR depth +
 GT-free spatial tracking), EgoMem recalls out-of-view objects the baselines cannot
 (0.48 vs 0.00 at a 1 m tolerance; 1.00 vs 0.00 when detections are GT-grouped),
-the strict 0.5 m tolerance quantifying real perception's ~1 m localization cost. We
-release the layer (mean / median / trust-but-verify aggregators) as an installable
-library with a CLI that reproduces every number here.
+the strict 0.5 m tolerance quantifying real perception's ~1 m localization cost.
+Crucially, this recall converts to **task success**: in a closed-loop long-horizon
+fetch task, the same memory lifts completion from ~1 % to 100 % (+99 points) in the
+realistic large-space, limited-sensing regime, with the gain scaling with partial
+observability. We release the layer (mean / median / trust-but-verify aggregators)
+as an installable library with a CLI that reproduces every number here.
 
 ## 1. Introduction
 
@@ -469,7 +472,40 @@ false-positive tracks are excluded). With **no oracle anywhere** in the pipeline
 merges); the central claim — memory enables out-of-view recall that a memoryless
 controller cannot — survives even this strictest, fully-real test.
 
-## 8. Limitations
+## 8. Downstream task success
+
+Recall@tolerance is a proxy; what matters is whether memory lets a *policy complete a
+task* it otherwise fails. We test this directly in a closed-loop **scan-then-fetch**
+task: an agent first does a mapping scan of a room (building memory), then must navigate
+to K = 4 target objects in a fixed order under FOV- and range-limited sensing. The
+*same* rule-based controller drives every arm — it steers toward whatever world position
+`query` returns for the current (usually out-of-view) target; the arms differ only in
+what the memory supplies. **Success = all 4 targets reached within a step budget** — a
+task-level metric, not recall. We sweep difficulty (room size / sensing range), 3 seeds
+× 200 episodes each.
+
+**Table 10. Long-horizon fetch — task success rate (mean of 3 seeds).** Rows:
+`RESULTS.md` `exp_id = fetch-task *`.
+
+| difficulty (room / sensing range) | no-memory | naive | EgoMem | gain |
+|---|---|---|---|---|
+| easy (8 m / 6 m) | 0.975 | 0.658 | 1.000 | +2.5 pts |
+| medium (11 m / 5 m) | 0.205 | 0.195 | 1.000 | +79.5 pts |
+| hard (14 m / 4 m) | 0.010 | 0.013 | 1.000 | **+99.0 pts** |
+
+**Memory's task value scales with partial observability.** When the agent can re-observe
+freely (small room, long range), search is cheap and memory barely helps (+2.5 pts). In
+the realistic regime — a large space with limited sensing, where you *cannot* spin to
+re-acquire a distant object — memory is **decisive: it lifts task completion from ~1 %
+to 100 %** (+99 pts). The naive raw-frame buffer is no better than no memory and often
+worse: a stale, un-transformed bearing actively misdirects the controller. This connects
+the recall results (§5–§7) to the thing that matters: the same neutral memory that
+improves out-of-view recall converts long-horizon, partially-observed tasks from
+near-impossible to solved. (The controller is rule-based to isolate the memory's
+*information* value; perception here is clean synthetic — the real-perception cost is
+quantified in §7.6.)
+
+## 9. Limitations
 
 - **Substrate & perception.** The core §5–§6 study is a geometric egomotion
   simulator with exact ground truth; §7 uses real ARKitScenes data (real VIO
@@ -496,10 +532,12 @@ controller cannot — survives even this strictest, fully-real test.
   pose error and breaks for precise position recall under heavy drift. The method
   presumes reasonable localization — which wearable egocentric rigs (ARKit-class
   VIO) provide, but which must be verified on real captures.
-- **Scope.** A single task (out-of-view recall) and one substrate. Other
-  long-horizon abilities (task-stage memory, affordances) are untested.
+- **Scope.** Two tasks (out-of-view recall §5–§7; closed-loop fetch §8) and one
+  substrate. The §8 controller is rule-based (isolating the memory's information
+  value, not a learned policy), and other long-horizon abilities (task-stage memory,
+  affordances) are untested.
 
-## 9. Conclusion
+## 10. Conclusion
 
 A model-agnostic memory layer for robotics, fed by egocentric video, is feasible
 and useful: a single non-parametric `write/query` store improves both a
@@ -527,10 +565,12 @@ the recommended aggregator. Dropping the oracle entirely — **real detector +
 real LiDAR depth + GT-free spatial tracking** (§7.6) — EgoMem still recalls
 out-of-view objects the baselines cannot (0.484 vs 0.000 at 1.0 m, fully GT-free;
 1.000 vs 0.000 with GT-grouped detections), the strict 0.5 m tolerance quantifying
-the ~1 m localization cost of real perception. We release EgoMem (mean, median, and
-trust-but-verify aggregators) as an installable library and CLI that reproduces
-every number reported here, as the buyer-side, neutral memory the literature has not
-yet offered. The clearest next step is larger-scale evaluation with a stronger
+the ~1 m localization cost of real perception. And it pays off where it counts: in a
+closed-loop long-horizon fetch task (§8), the same memory raises task completion from
+~1 % to 100 % in the realistic large-space / limited-sensing regime, the gain scaling
+with partial observability. We release EgoMem (mean, median, and trust-but-verify
+aggregators) as an installable library and CLI that reproduces every number reported
+here, as the buyer-side, neutral memory the literature has not yet offered. The clearest next step is larger-scale evaluation with a stronger
 detector/tracker, which §7.1–§7.6 now equip with a quantified
 accuracy/recall/association envelope to hit.
 

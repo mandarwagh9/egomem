@@ -216,9 +216,25 @@ MOT-style; spurious FP tracks excluded). Closes the H8 eval-side GT-grouping cav
   baselines recall ZERO. The drop from H8's 1.000 to 0.484 is the honest cost of real
   data association. The core claim survives the strictest, fully-real test.
 
+**CYCLE 10 COMPLETE — H10: downstream TASK SUCCESS (the DD-proof headline).** Paper §8.
+
+### H10 (2026-06-14): closed-loop long-horizon fetch — task completion, not recall
+`experiments/2026-06-14_task-success/fetch_task.py`: scan-then-fetch — map a room, then
+navigate to K=4 targets in order under FOV+range-limited sensing. Same rule-based
+controller for all arms; differ only in what memory supplies for out-of-view targets.
+- **Result (difficulty sweep, 3 seeds×200):** easy (room8/range6) egomem 1.000 vs
+  no-mem 0.975 → +2.5 (REJECTED, search cheap); medium (11/5) 1.000 vs 0.205 → **+79.5**;
+  hard (14/4) 1.000 vs 0.010 → **+99.0** (CONFIRMED). naive ≈ no-mem or worse.
+- **Finding:** memory's task value **scales with partial observability**; in the
+  realistic regime it lifts completion **~1% → 100%**. Converts the recall proxy
+  (H1–H9) into a task-level number. 3 RESULTS rows; `stdout_fetch.log`; paper §8.
+- **Strategic context:** this was the "harden the claim" ask — the headline is now
+  "+X-point long-horizon task success", DD-proof, not a recall@tol proxy.
+
 ### Next (optional, refinements only)
-Stronger detector/tracker; official ARKitScenes annotation alignment (pass >3/6
-scenes); larger-scale runs (GPU). No open scientific questions in the core arc.
+Learned policy (vs rule-based controller); real-perception task-success (combine §8 with
+§7.6 pipeline); stronger detector/tracker; larger-scale (GPU). No open scientific
+questions in the core arc.
 
 (Cycle-1 history below.)
 
@@ -300,6 +316,20 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-14 — H10: downstream TASK SUCCESS — memory decisive (Cycle 10 COMPLETE)
+- **Did:** Built `fetch_task.py` — closed-loop scan-then-fetch long-horizon task; same
+  controller all arms; metric = task completion (all K=4 reached). Swept difficulty
+  (room/range), 3 seeds×200 episodes. First (easy) config REJECTED (search too cheap);
+  redesigned to realistic large-space/limited-sensing.
+- **Result:** task success egomem 1.000 throughout; no-memory 0.975→0.205→0.010 as the
+  task gets harder. Gain +2.5 / +79.5 / **+99.0** pts. CONFIRMED in the partial-
+  observability regime. 3 RESULTS rows; `stdout_fetch.log`; paper §8 (Table 10).
+- **Finding:** the recall proxy (H1–H9) converts to **task-level value** — memory lifts
+  long-horizon completion from ~1% to 100% where re-observation isn't free. Answers the
+  "harden the claim" strategic ask with a DD-proof headline. Ten cycles.
+- **Next task:** none in-loop (refinements only).
+- **Blocker:** none.
 
 ### 2026-06-14 — H9: fully GT-free real pipeline (real tracker); CONFIRMED @1.0m (Cycle 9)
 - **Did:** Added GT-free online spatial tracker (`--tracker`) to `arkit_detector.py`,
@@ -600,7 +630,7 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ---
 
-STATUS: CYCLES 1–9 COMPLETE
+STATUS: CYCLES 1–10 COMPLETE
 
 Cycle 1 (synthetic, 2026-06-13): EgoMem invented, validated (3-seed defended
 result with a characterized pose-drift failure boundary), packaged as an

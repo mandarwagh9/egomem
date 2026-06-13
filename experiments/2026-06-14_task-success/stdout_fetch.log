@@ -1,0 +1,12 @@
+##### difficulty=easy (room=8 range=6 budget=140) #####
+  no-memory=0.975  naive=0.658  egomem=1.000
+  egomem - no-memory = +0.025  (+2.5 points)
+  H10 (egomem >= no-memory + 0.20 AND >= naive): REJECTED
+##### difficulty=medium (room=11 range=5 budget=130) #####
+  no-memory=0.205  naive=0.195  egomem=1.000
+  egomem - no-memory = +0.795  (+79.5 points)
+  H10 (egomem >= no-memory + 0.20 AND >= naive): CONFIRMED
+##### difficulty=hard (room=14 range=4 budget=130) #####
+  no-memory=0.010  naive=0.013  egomem=1.000
+  egomem - no-memory = +0.990  (+99.0 points)
+  H10 (egomem >= no-memory + 0.20 AND >= naive): CONFIRMED
