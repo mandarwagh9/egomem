@@ -66,35 +66,28 @@ defended-result writeup. Revisit if compute proves cheaper/dearer than expected.
 
 ---
 
-## CURRENT PHASE = 6 (PAPER)
+## CURRENT PHASE = 7 (PACKAGE)
 
-Phase 5 closed: `lib/egomem` is a real installable package. `pip install -e lib`
-works; `from egomem import EgoMem, Observation, QueryState, Detection` imports;
-console script `egomem demo` and `egomem sim` both run; **`egomem sim --seed 0`
-reproduces the committed seed-0 numbers exactly** (no-mem 0.016/0.280, naive
-0.027/0.371, egomem 1.000/1.000 — see `experiments/.../stdout_lib_seed0.log`),
-proving the library is faithful to the validated experiment.
+Phase 6 closed: `paper/paper.md` written in full (abstract, intro, related work,
+method, experiments, results Table 1, pose-drift ablation Table 2, limitations,
+conclusion, references, repro). Verified **zero TODO/placeholder markers**; every
+table cell traces to a `RESULTS.md` row; the negative boundary (drift 0.15 rejects
+H1 for the world-model consumer) is reported honestly.
 
-### Next single task — write `paper/paper.md` in full
-Use ONLY committed material: `research/landscape.md` (+ BIBLIOGRAPHY.md),
-`research/hypothesis.md`, `research/design.md`, and **every number from
-RESULTS.md** (24 rows). Sections: abstract, intro, related work, method,
-experiments, results, ablations (the pose-drift boundary), limitations,
-conclusion. Rules: every quantitative claim cites a RESULTS.md row; report the
-negative boundary (drift 0.15 rejects H1 for the world-model consumer) honestly;
-**zero TODO markers**; no number that isn't in RESULTS.md. A figure/table is fine
-only if its data is a RESULTS.md row.
-Phase 6 EXIT: paper complete, zero TODOs, every figure/number traces to data.
+### Next single task — finalize packaging, then mark COMPLETE
+1. Rewrite the top-level `README.md` into a proper package front page: one-line
+   pitch, the headline result (with the honest localization caveat), install +
+   **reproduce** commands (`pip install -e lib`; `egomem demo`; `egomem sim
+   --seed 0`), and links to `paper/paper.md`, `RESULTS.md`, `BIBLIOGRAPHY.md`,
+   `research/`. The `egomem demo` CLI is the demo (no gif needed; note it as the
+   one-command demo).
+2. Sanity-check the repo: BIBLIOGRAPHY present (7 sources), demo command runs,
+   `.gitignore` keeps egg-info/artifacts out.
+3. Append `STATUS: COMPLETE` to the bottom of this file.
+Phase 7 EXIT: README has repro steps, the demo runs, BIBLIOGRAPHY is in place →
+STATUS: COMPLETE.
 
-### Honest limitations the paper MUST state
-- Synthetic egomotion testbed (no real human video yet); oracle data association
-  (obj_id given) — real detection/tracking not tested.
-- Read-heads are tiny MLPs ≈ linear readouts; the claim is about *information
-  availability in a neutral memory*, not consumer sophistication.
-- Real-egocentric-clip validation is future work (Phase-4/5 stretch; GCP+GPU
-  available — see Resources). The pose-drift ablation is the proxy for real VIO.
-
-(Phase 4 defended-result detail retained below for the paper writer.)
+(Defended-result detail retained below.)
 
 Phase 4 closed with a **defended result** (3 seeds clean + a characterized
 stress boundary). See RESULTS.md (24 rows) and `experiments/2026-06-13_oov-recall/`.
@@ -149,6 +142,18 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-13 — Paper written (Phase 6 → 7)
+- **Did:** Wrote `paper/paper.md` in full from committed material + every
+  RESULTS.md row. Table 1 (clean, 3 seeds) and Table 2 (pose-drift ablation) each
+  trace cell-by-cell to logged rows. Verified zero TODO/placeholder markers via
+  grep. Reported the drift-0.15 negative boundary honestly (H1 rejected for the
+  world-model consumer; VLA survives). Stated limitations (synthetic substrate,
+  oracle association, minimal heads, localization dependence).
+- **Finding:** Phase 6 EXIT met → **CURRENT PHASE = 7 (PACKAGE)**.
+- **Next task:** finalize top-level README (pitch + result + repro + links),
+  sanity-check, then append STATUS: COMPLETE.
+- **Blocker:** none.
 
 ### 2026-06-13 — Library packaged + fresh-install verified (Phase 5 → 6)
 - **Did:** Refactored the validated core into installable `lib/egomem` (neutral
