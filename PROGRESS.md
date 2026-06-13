@@ -66,40 +66,49 @@ defended-result writeup. Revisit if compute proves cheaper/dearer than expected.
 
 ---
 
-## CURRENT PHASE = 4 (ITERATE)
+## CURRENT PHASE = 5 (BUILD)
 
-Phase 3 closed: ran `experiments/2026-06-13_oov-recall/run_experiment.py` (seed 0,
-CPU, deterministic). **H1 CONFIRMED for both consumers** — egomem 1.000/1.000 vs
-no-memory 0.016/0.280 and naive 0.027/0.371 (WM succ@0.5m / VLA dir succ@30deg).
-6 rows in RESULTS.md; raw log + `metrics_seed0.json` in the experiment folder.
+Phase 4 closed with a **defended result** (3 seeds clean + a characterized
+stress boundary). See RESULTS.md (24 rows) and `experiments/2026-06-13_oov-recall/`.
 
-### Analysis of the seed-0 number (why it is what it is)
-- EgoMem near-perfect because its `query` returns the out-of-view object's
-  position re-expressed in the CURRENT camera frame, so the tiny head learns a
-  near-identity readout — i.e. the *information is linearly present*. naive
-  carries the object but in a STALE frame (no pose transform) → ~floor, proving
-  the win comes from pose-aware world-frame integration, not buffering.
-  no-memory has no record → constant-prior floor, proving the task needs memory.
-- Caveats that Phase 4 must stress: (i) one seed only; (ii) clean synthetic
-  geometry + oracle data association (obj_id given) make it *easy* — a real-data
-  or noisier setting could erode the gap. The near-1.0 is honest but fragile.
+### Defended result (stated plainly)
+- **Clean pose (drift 0), 3 seeds:** H1 **CONFIRMED** both consumers. egomem
+  WM pos-recall ≈ **0.999** vs no-mem ≈0.011 / naive ≈0.018; egomem VLA dir
+  ≈ **1.000** vs no-mem ≈0.244 / naive ≈0.317. One non-parametric memory, written
+  once, serves BOTH a state-predictor (world-model) head and a policy (VLA) head,
+  unchanged → the **transfer claim is demonstrated**, and the win is from
+  pose-aware world-frame integration (naive ≈ floor isolates it).
+- **Stress = camera pose drift (one knob, 3 seeds each):**
+  - drift 0.05/step: H1 still CONFIRMED both (WM ≈0.31–0.34, VLA ≈0.91–0.94) —
+    degraded but above gate. Direction is drift-tolerant; precise position is hit.
+  - drift 0.15/step: H1 **REJECTED** — WM (position) collapses to ≈0.05–0.07
+    (≈ naive floor, falsifier #1) while VLA (direction) survives (≈0.49–0.56,
+    still > baseline).
+- **Bottom line:** the core claim holds **conditional on reasonable localization
+  quality** (which real egocentric rigs / ARKit-VIO provide). The precise
+  world-model consumer is the sensitive one; the coarse VLA-direction consumer is
+  robust. This is the honest scope of the invention.
 
-### Next single task — seed stability (the minimum for a defended result)
-Run seeds 1 and 2 of the SAME config (no design change): 
-`python run_experiment.py --seed 1` and `--seed 2`, tee to `stdout_seed{1,2}.log`.
-Append the per-arm × per-consumer rows to RESULTS.md (real numbers only). Confirm
-H1 holds across all 3 seeds. If it holds, the result is stable → that is the
-Phase 4 EXIT (a defended result), THEN consider one stress variant below.
+Iteration budget (≤6 variants) not exhausted; result is defended → proceed to BUILD.
 
-### After stability — one stress variant (change exactly ONE thing)
-Pick the single most informative knob to find where the effect breaks:
-raise `DET_NOISE` (e.g. 0.05 → 0.25) OR add per-frame pose drift, so EgoMem is no
-longer trivially perfect. Rerun 3 seeds. This probes robustness and gives the
-paper an ablation. Treat a changed number as a NEW set of RESULTS rows (note the
-variant), never an edit of an old row.
+### Next single task — package the core into an installable `lib/`
+Refactor the validated method (NOT new science) into `lib/` as a real package:
+1. `lib/pyproject.toml` (name `egomem`, deps numpy + torch; py>=3.10).
+2. `lib/egomem/__init__.py`, `lib/egomem/memory.py` — move the neutral API
+   (`Observation`, `QueryState`, `RecalledObject`) + the 3 arms (`NoMemory`,
+   `NaiveBuffer`, `EgoMem`) + geometry helpers out of the experiment script into
+   the package, as the importable library. Keep behavior identical.
+3. Keep it minimal and real — NO stubs presented as working. The CLI + demo +
+   fresh-install smoke test is the NEXT task (Phase 5 step 2), not this one.
+This step EXIT: `python -c "from egomem.memory import EgoMem, Observation"` works
+from an install/`pip install -e lib`.
 
-### Iteration budget: ≤6 variants (PROGRESS top). Stop iterating when stable
-across ≥2 seeds AND at least one stress variant is characterized, then → Phase 5.
+### Then (Phase 5 step 2 — next task)
+Add `lib/egomem/cli.py` + console entry point: `egomem demo` (runs a tiny
+synthetic recall demo end-to-end and prints the 3-arm comparison) and
+`egomem sim --seed N --pose-drift D` (re-runs the experiment via the library).
+Add `lib/README.md` install/run steps. Smoke-test from a fresh checkout.
+Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## Resources available (for escalation)
 - **GCP**: gcloud installed + authenticated as `roboticsblack@gmail.com` (active).
@@ -112,6 +121,23 @@ across ≥2 seeds AND at least one stress variant is characterized, then → Pha
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-13 — Seed stability + pose-drift stress; defended result (Phase 4 → 5)
+- **Did:** Ran seeds 1 & 2 of the clean config (H1 CONFIRMED both, all 3 seeds:
+  WM egomem 1.000/1.000/0.998, VLA 1.000 across). Added one stress knob —
+  camera `pose_drift` (simulated VIO/odometry error, affects ONLY egomem since
+  no-mem/naive ignore pose) — and swept {0.05, 0.15} × 3 seeds. Logged 12
+  egomem-condition rows to RESULTS.md (24 total); full per-arm numbers in
+  `stdout_drift.log` + `metrics_*` JSONs.
+- **Result (real):** drift 0.05 → H1 still CONFIRMED both (WM ≈0.31–0.34, VLA
+  ≈0.91–0.94). drift 0.15 → H1 REJECTED: WM collapses to ≈0.05–0.07 (≈ naive,
+  falsifier #1); VLA survives ≈0.49–0.56 (> baseline). Boundary found.
+- **Finding (defended):** the model-agnostic memory genuinely helps BOTH
+  consumers, **conditional on good localization**. Precise-position (world-model)
+  use is pose-sensitive; coarse-direction (VLA) use is robust. Honest scope set.
+  Phase 4 EXIT met → **CURRENT PHASE = 5 (BUILD)**.
+- **Next task:** package the core into installable `lib/egomem` (see above).
+- **Blocker:** none.
 
 ### 2026-06-13 — Experiment run, H1 confirmed seed 0 (Phase 3 → 4)
 - **Did:** Implemented + ran `experiments/2026-06-13_oov-recall/run_experiment.py`

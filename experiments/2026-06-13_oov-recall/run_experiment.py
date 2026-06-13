@@ -60,7 +60,9 @@ def visible(P_world, T):
         return False, p
     return True, p
 
-def gen_episode(rng):
+def gen_episode(rng, pose_drift=0.0):
+    # Detections are computed in the TRUE camera frame (real geometry); the pose handed to
+    # the MEMORY is a drifted version (simulated VIO/odometry error) when pose_drift>0.
     M = int(rng.integers(6, 11))
     obj_pos = np.column_stack([
         rng.uniform(0.5, ROOM - 0.5, M),
@@ -69,17 +71,24 @@ def gen_episode(rng):
     ])
     pos = np.array([rng.uniform(1.5, ROOM - 1.5), rng.uniform(1.5, ROOM - 1.5), CAM_Z])
     theta = rng.uniform(-math.pi, math.pi)
-    frames = []        # list of (cam_pose, detections[list of (oid, p_cam_noisy, conf)])
+    dpos = np.zeros(3); dtheta = 0.0    # accumulating pose drift seen by the memory
+    frames = []        # list of (T_true, T_drift, detections[list of (oid, p_cam_noisy, conf)])
     for t in range(T_FRAMES):
-        T_mat = cam_pose_mat(pos.copy(), theta)
+        T_true = cam_pose_mat(pos.copy(), theta)
+        if pose_drift > 0:
+            dtheta += rng.normal(0, pose_drift)
+            dpos[:2] += rng.normal(0, pose_drift, 2)
+            T_drift = cam_pose_mat(pos + dpos, theta + dtheta)
+        else:
+            T_drift = T_true
         dets = []
         for oid in range(M):
-            vis, p_cam = visible(obj_pos[oid], T_mat)
+            vis, p_cam = visible(obj_pos[oid], T_true)
             if vis:
                 p_noisy = p_cam + rng.normal(0, DET_NOISE, 3)
                 conf = float(np.clip(1.0 - p_cam[2] / MAX_RANGE, 0.1, 1.0))
                 dets.append((oid, p_noisy, conf))
-        frames.append((T_mat, dets))
+        frames.append((T_true, T_drift, dets))
         # egomotion: smooth random walk, reflect at walls
         theta += rng.uniform(-0.4, 0.4)
         nxt = pos[:2] + STEP_LEN * np.array([math.cos(theta), math.sin(theta)])
@@ -136,17 +145,17 @@ def build_samples(episodes, arm_name):
     X, Y_pos, Y_dir = [], [], []
     for obj_pos, frames in episodes:
         seen = set()
-        for _, dets in frames[:-1]:
+        for _, _, dets in frames[:-1]:
             for oid, _, _ in dets:
                 seen.add(oid)
-        T_now, last_dets = frames[-1]
+        T_now_true, T_now_drift, last_dets = frames[-1]
         vis_now = {oid for oid, _, _ in last_dets}
         mem = ARMS[arm_name]()
-        for T_mat, dets in frames:
-            mem.write(T_mat, dets)
-        records = mem.query(T_now, last_dets)
+        for T_true, T_drift, dets in frames:
+            mem.write(T_drift, dets)                          # memory sees the (possibly drifted) pose
+        records = mem.query(T_now_drift, last_dets)
         for oid in sorted(seen - vis_now):                    # out-of-view recall targets
-            true_cam = to_cam(obj_pos[oid], T_now)            # ground-truth position now (noiseless)
+            true_cam = to_cam(obj_pos[oid], T_now_true)       # ground-truth position now (true pose, noiseless)
             rec = records.get(oid)
             if rec is None:                                   # no-memory: empty record
                 feat = [0, 0, 0, 0.0, 0.0, 0.0]
@@ -202,14 +211,17 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--n_train", type=int, default=200)
     ap.add_argument("--n_test", type=int, default=100)
+    ap.add_argument("--pose_drift", type=float, default=0.0,
+                    help="per-step std of camera pose drift seen by the memory (0 = none)")
     args = ap.parse_args()
 
     rng = np.random.default_rng(args.seed)
-    train_eps = [gen_episode(rng) for _ in range(args.n_train)]
-    test_eps = [gen_episode(rng) for _ in range(args.n_test)]
+    train_eps = [gen_episode(rng, args.pose_drift) for _ in range(args.n_train)]
+    test_eps = [gen_episode(rng, args.pose_drift) for _ in range(args.n_test)]
 
     print(f"=== EgoMem out-of-view recall | seed={args.seed} | "
-          f"n_train={args.n_train} n_test={args.n_test} T={T_FRAMES} FOV=60deg ===")
+          f"n_train={args.n_train} n_test={args.n_test} T={T_FRAMES} FOV=60deg "
+          f"pose_drift={args.pose_drift} ===")
     results = {}
     for arm in ARMS:
         Xtr, Yp_tr, Yd_tr = build_samples(train_eps, arm)
@@ -240,12 +252,13 @@ def main():
 
     out = dict(seed=args.seed, config=dict(n_train=args.n_train, n_test=args.n_test,
                T_frames=T_FRAMES, half_fov_deg=30.0, max_range=MAX_RANGE, det_noise=DET_NOISE,
-               tol_pos_m=0.5, tol_ang_deg=30.0, threshold_pp=20),
+               pose_drift=args.pose_drift, tol_pos_m=0.5, tol_ang_deg=30.0, threshold_pp=20),
                results=results, wm_pass=wm_pass, vla_pass=vla_pass, H1=("CONFIRMED" if h1 else "REJECTED"))
     here = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(here, f"metrics_seed{args.seed}.json"), "w") as fh:
+    tag = f"seed{args.seed}" + (f"_drift{args.pose_drift}" if args.pose_drift > 0 else "")
+    with open(os.path.join(here, f"metrics_{tag}.json"), "w") as fh:
         json.dump(out, fh, indent=2)
-    print(f"\nwrote metrics_seed{args.seed}.json")
+    print(f"\nwrote metrics_{tag}.json")
 
 if __name__ == "__main__":
     main()

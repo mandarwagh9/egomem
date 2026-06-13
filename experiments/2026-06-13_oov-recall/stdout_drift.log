@@ -1,0 +1,66 @@
+=== EgoMem out-of-view recall | seed=0 | n_train=200 n_test=100 T=30 FOV=60deg pose_drift=0.05 ===
+[no-memory] train_q= 883 test_q= 421 | WM(pos) success=0.005 mean_err=3.680m | VLA(dir) success=0.230 mean_err=70.5deg
+[naive    ] train_q= 883 test_q= 421 | WM(pos) success=0.017 mean_err=3.478m | VLA(dir) success=0.328 mean_err=60.7deg
+[egomem   ] train_q= 883 test_q= 421 | WM(pos) success=0.340 mean_err=0.872m | VLA(dir) success=0.931 mean_err=12.6deg
+
+--- H1 threshold check (EgoMem >= no-memory + 20pp AND >= naive) ---
+ world-model consumer: egomem=0.340 no-mem=0.005 naive=0.017 -> PASS
+ VLA consumer:         egomem=0.931 no-mem=0.230 naive=0.328 -> PASS
+ H1 (both consumers): CONFIRMED
+
+wrote metrics_seed0_drift0.05.json
+=== EgoMem out-of-view recall | seed=1 | n_train=200 n_test=100 T=30 FOV=60deg pose_drift=0.05 ===
+[no-memory] train_q= 929 test_q= 436 | WM(pos) success=0.002 mean_err=3.548m | VLA(dir) success=0.266 mean_err=66.9deg
+[naive    ] train_q= 929 test_q= 436 | WM(pos) success=0.009 mean_err=3.427m | VLA(dir) success=0.307 mean_err=59.9deg
+[egomem   ] train_q= 929 test_q= 436 | WM(pos) success=0.326 mean_err=0.916m | VLA(dir) success=0.906 mean_err=13.6deg
+
+--- H1 threshold check (EgoMem >= no-memory + 20pp AND >= naive) ---
+ world-model consumer: egomem=0.326 no-mem=0.002 naive=0.009 -> PASS
+ VLA consumer:         egomem=0.906 no-mem=0.266 naive=0.307 -> PASS
+ H1 (both consumers): CONFIRMED
+
+wrote metrics_seed1_drift0.05.json
+=== EgoMem out-of-view recall | seed=2 | n_train=200 n_test=100 T=30 FOV=60deg pose_drift=0.05 ===
+[no-memory] train_q= 893 test_q= 429 | WM(pos) success=0.000 mean_err=3.629m | VLA(dir) success=0.298 mean_err=66.4deg
+[naive    ] train_q= 893 test_q= 429 | WM(pos) success=0.028 mean_err=3.297m | VLA(dir) success=0.336 mean_err=55.4deg
+[egomem   ] train_q= 893 test_q= 429 | WM(pos) success=0.310 mean_err=0.905m | VLA(dir) success=0.937 mean_err=13.6deg
+
+--- H1 threshold check (EgoMem >= no-memory + 20pp AND >= naive) ---
+ world-model consumer: egomem=0.310 no-mem=0.000 naive=0.028 -> PASS
+ VLA consumer:         egomem=0.937 no-mem=0.298 naive=0.336 -> PASS
+ H1 (both consumers): CONFIRMED
+
+wrote metrics_seed2_drift0.05.json
+=== EgoMem out-of-view recall | seed=0 | n_train=200 n_test=100 T=30 FOV=60deg pose_drift=0.15 ===
+[no-memory] train_q= 883 test_q= 421 | WM(pos) success=0.005 mean_err=3.680m | VLA(dir) success=0.230 mean_err=70.5deg
+[naive    ] train_q= 883 test_q= 421 | WM(pos) success=0.017 mean_err=3.478m | VLA(dir) success=0.328 mean_err=60.7deg
+[egomem   ] train_q= 883 test_q= 421 | WM(pos) success=0.050 mean_err=2.233m | VLA(dir) success=0.494 mean_err=35.8deg
+
+--- H1 threshold check (EgoMem >= no-memory + 20pp AND >= naive) ---
+ world-model consumer: egomem=0.050 no-mem=0.005 naive=0.017 -> FAIL
+ VLA consumer:         egomem=0.494 no-mem=0.230 naive=0.328 -> PASS
+ H1 (both consumers): REJECTED
+
+wrote metrics_seed0_drift0.15.json
+=== EgoMem out-of-view recall | seed=1 | n_train=200 n_test=100 T=30 FOV=60deg pose_drift=0.15 ===
+[no-memory] train_q= 929 test_q= 436 | WM(pos) success=0.002 mean_err=3.548m | VLA(dir) success=0.266 mean_err=66.9deg
+[naive    ] train_q= 929 test_q= 436 | WM(pos) success=0.009 mean_err=3.427m | VLA(dir) success=0.307 mean_err=59.9deg
+[egomem   ] train_q= 929 test_q= 436 | WM(pos) success=0.048 mean_err=2.308m | VLA(dir) success=0.507 mean_err=38.1deg
+
+--- H1 threshold check (EgoMem >= no-memory + 20pp AND >= naive) ---
+ world-model consumer: egomem=0.048 no-mem=0.002 naive=0.009 -> FAIL
+ VLA consumer:         egomem=0.507 no-mem=0.266 naive=0.307 -> PASS
+ H1 (both consumers): REJECTED
+
+wrote metrics_seed1_drift0.15.json
+=== EgoMem out-of-view recall | seed=2 | n_train=200 n_test=100 T=30 FOV=60deg pose_drift=0.15 ===
+[no-memory] train_q= 893 test_q= 429 | WM(pos) success=0.000 mean_err=3.629m | VLA(dir) success=0.298 mean_err=66.4deg
+[naive    ] train_q= 893 test_q= 429 | WM(pos) success=0.028 mean_err=3.297m | VLA(dir) success=0.336 mean_err=55.4deg
+[egomem   ] train_q= 893 test_q= 429 | WM(pos) success=0.072 mean_err=2.278m | VLA(dir) success=0.557 mean_err=36.6deg
+
+--- H1 threshold check (EgoMem >= no-memory + 20pp AND >= naive) ---
+ world-model consumer: egomem=0.072 no-mem=0.000 naive=0.028 -> FAIL
+ VLA consumer:         egomem=0.557 no-mem=0.298 naive=0.336 -> PASS
+ H1 (both consumers): REJECTED
+
+wrote metrics_seed2_drift0.15.json
