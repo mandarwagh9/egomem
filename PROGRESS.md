@@ -317,6 +317,18 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## RUN LOG (newest first)
 
+### 2026-06-14 — Fundraise assets (positioning + investor one-pager) [non-research]
+- **Did:** Produced pre-seed fundraise materials using the YC-positioning lens:
+  `POSITIONING.md` (one-liner reframe, fit scorecard, narrative, RFS lane, anti-signal
+  fixes, draft pitch answers) and `INVESTOR_ONEPAGER.md`. Added citable arXiv-ready
+  front-matter + repro note to `paper/paper.md`. Founder-only facts (traction, team,
+  raise) left as explicit `[FILL IN]` — NOT fabricated.
+- **Framing:** Black Robotics = neutral data+memory layer for embodied AI (picks &
+  shovels); EgoMem = the validated wedge/credibility, not revenue. Honest pre-seed read:
+  founder+insight+shipped-build carry; go get 1 outside pilot + 1 hard data number.
+- **Next:** founder to fill the `[FILL IN]` blanks (traction, team, raise); optionally
+  move docs to `blackrobotics-pitch`. No research action.
+
 ### 2026-06-14 — H10: downstream TASK SUCCESS — memory decisive (Cycle 10 COMPLETE)
 - **Did:** Built `fetch_task.py` — closed-loop scan-then-fetch long-horizon task; same
   controller all arms; metric = task completion (all K=4 reached). Swept difficulty

@@ -1,6 +1,12 @@
 # EgoMem: A Model-Agnostic Memory Layer for Robotics from Egocentric Human Video
 
-**Black Robotics.** 2026-06-13.
+`[FILL IN: Author name(s)]`, Black Robotics · 2026 · Technical report.
+Code & data to reproduce every number: <https://github.com/[FILL IN]/egomem> (`/lib`, `/paper`,
+append-only `RESULTS.md`). Contact: roboticsblack@gmail.com.
+
+> **Reproducibility.** Every quantitative claim cites a row in `RESULTS.md` produced by a
+> logged run; no estimated or expected numbers appear. `pip install -e lib && pytest lib/tests`;
+> `egomem sim --seed 0` reproduces the headline synthetic result.
 
 ## Abstract
 
