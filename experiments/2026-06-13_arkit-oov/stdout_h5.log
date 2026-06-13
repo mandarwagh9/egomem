@@ -1,0 +1,36 @@
+########## det=0.0 miss=0.0 assoc=0.0 ##########
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.697 err=0.38m | VLA succ=1.000 err=5.2deg
+  [egomem-robust] train_q=  61 test_q=  33 | WM succ=0.697 err=0.38m | VLA succ=1.000 err=5.2deg
+  egomem check: WM PASS | VLA PASS -> CONFIRMED
+  egomem-robust check: WM PASS | VLA PASS -> CONFIRMED
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=1.000 err=0.17m | VLA succ=1.000 err=4.7deg
+  [egomem-robust] train_q=  63 test_q=  31 | WM succ=1.000 err=0.17m | VLA succ=1.000 err=4.7deg
+  egomem check: WM PASS | VLA PASS -> CONFIRMED
+  egomem-robust check: WM PASS | VLA PASS -> CONFIRMED
+########## det=0.0 miss=0.0 assoc=0.2 ##########
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.061 err=1.23m | VLA succ=0.182 err=62.1deg
+  [egomem-robust] train_q=  61 test_q=  33 | WM succ=0.182 err=1.10m | VLA succ=0.364 err=40.1deg
+  egomem check: WM FAIL | VLA FAIL -> REJECTED
+  egomem-robust check: WM FAIL | VLA PASS -> REJECTED
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.387 err=0.90m | VLA succ=0.742 err=19.4deg
+  [egomem-robust] train_q=  63 test_q=  31 | WM succ=0.581 err=0.74m | VLA succ=0.774 err=18.2deg
+  egomem check: WM PASS | VLA PASS -> CONFIRMED
+  egomem-robust check: WM PASS | VLA PASS -> CONFIRMED
+########## det=0.0 miss=0.0 assoc=0.5 ##########
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.000 err=2.00m | VLA succ=0.242 err=62.7deg
+  [egomem-robust] train_q=  61 test_q=  33 | WM succ=0.182 err=1.52m | VLA succ=0.515 err=36.1deg
+  egomem check: WM FAIL | VLA PASS -> REJECTED
+  egomem-robust check: WM FAIL | VLA PASS -> REJECTED
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.065 err=1.91m | VLA succ=0.226 err=68.3deg
+  [egomem-robust] train_q=  63 test_q=  31 | WM succ=0.129 err=2.06m | VLA succ=0.129 err=69.5deg
+  egomem check: WM FAIL | VLA FAIL -> REJECTED
+  egomem-robust check: WM FAIL | VLA FAIL -> REJECTED
+########## det=0.10 miss=0.3 assoc=0.2 ##########
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.152 err=1.07m | VLA succ=0.303 err=51.7deg
+  [egomem-robust] train_q=  61 test_q=  33 | WM succ=0.303 err=0.80m | VLA succ=0.485 err=30.0deg
+  egomem check: WM FAIL | VLA PASS -> REJECTED
+  egomem-robust check: WM PASS | VLA PASS -> CONFIRMED
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=0.065 err=1.49m | VLA succ=0.355 err=44.1deg
+  [egomem-robust] train_q=  63 test_q=  31 | WM succ=0.258 err=1.27m | VLA succ=0.581 err=37.5deg
+  egomem check: WM FAIL | VLA PASS -> REJECTED
+  egomem-robust check: WM PASS | VLA PASS -> CONFIRMED

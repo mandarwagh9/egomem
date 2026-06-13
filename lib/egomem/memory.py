@@ -20,7 +20,7 @@ import numpy as np
 
 __all__ = [
     "Detection", "Observation", "QueryState", "RecalledObject",
-    "NoMemory", "NaiveBuffer", "EgoMem", "MEMORIES",
+    "NoMemory", "NaiveBuffer", "EgoMem", "EgoMemRobust", "MEMORIES",
     "cam_pose_mat", "to_cam", "to_world",
 ]
 
@@ -180,4 +180,42 @@ class EgoMem:
         return _ordered(out, state.goal_category)
 
 
+class EgoMemRobust:
+    """Association-robust variant of EgoMem: keeps per-object world-position
+    observations and returns the coordinate-wise MEDIAN at query instead of the
+    running mean. A median tolerates a minority of mis-associated (wrong-id)
+    detections that a mean propagates, so this degrades more gracefully under
+    tracker id-swaps (validated: identical to EgoMem on clean data; strictly better
+    under association error, recovering the realistic noise+miss+swap operating
+    point — see paper §7.3). Heavy association error still needs explicit
+    association handling."""
+    def __init__(self, default_conf: float = 0.5, max_obs: int = 128):
+        self.obs = {}            # key -> dict(category, poss=[world pos], last_seen_t)
+        self.default_conf = default_conf
+        self.max_obs = max_obs
+
+    def write(self, obs: Observation) -> None:
+        for d in obs.detections:
+            Pw = to_world(d.pos_cam, obs.cam_pose)
+            k = d.key()
+            e = self.obs.get(k)
+            if e is None:
+                e = dict(category=d.category, poss=[], last_seen_t=obs.t)
+                self.obs[k] = e
+            e["poss"].append(Pw); e["last_seen_t"] = obs.t; e["category"] = d.category
+            if len(e["poss"]) > self.max_obs:
+                e["poss"].pop(0)
+
+    def query(self, state: QueryState):
+        out = _visible_records(state)
+        for k, e in self.obs.items():
+            if k not in out:
+                med = np.median(np.asarray(e["poss"]), axis=0)
+                out[k] = RecalledObject(k, e["category"], to_cam(med, state.cam_pose),
+                                        e["last_seen_t"], self.default_conf, False)
+        return _ordered(out, state.goal_category)
+
+
+# MEMORIES drives the sim/CLI benchmark arms; kept at the 3 documented arms so
+# `egomem sim` reproduction is unchanged. EgoMemRobust is exported for direct use.
 MEMORIES = {"no-memory": NoMemory, "naive": NaiveBuffer, "egomem": EgoMem}

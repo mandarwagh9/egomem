@@ -51,3 +51,16 @@ for rec in mem.query(QueryState(t=10, cam_pose=T1, visible=[], goal_category="cu
 `pos_cam_now` is the recalled object position re-expressed in the *querying*
 camera frame, so any downstream model consumes an egocentric answer without
 knowing the memory's internals.
+
+### Association-robust variant
+
+`EgoMemRobust` is a drop-in replacement that aggregates each object's positions by
+coordinate-wise **median** instead of mean. It is identical to `EgoMem` on clean
+data but tolerates a minority of mis-associated (wrong track id) detections, which
+break the mean variant (see `paper/paper.md` §7.2–§7.3). Use it when the upstream
+tracker may swap ids:
+
+```python
+from egomem import EgoMemRobust
+mem = EgoMemRobust()   # same write()/query() API as EgoMem
+```

@@ -34,8 +34,10 @@ the baselines across a noise×miss grid — its cross-frame averaging makes the 
 over a raw buffer *widen* as detections worsen. It does **not**, however, survive
 **data-association error**: injecting wrong track ids breaks the layer (a clean
 negative result), pinpointing correct association — not detector precision — as the
-binding constraint for a memory of this design. We release the layer as an
-installable library with a CLI that reproduces every number here.
+binding constraint for a memory of this design; a median aggregator partially
+mitigates it (free on clean data, recovering the realistic operating point). We
+release the layer as an installable library with a CLI that reproduces every number
+here.
 
 ## 1. Introduction
 
@@ -335,8 +337,33 @@ propagates (and simultaneously starves the true id of evidence). **The binding
 constraint for a memory of this design is therefore correct data association, not
 detector precision** — a sharp, actionable spec for any perception front-end:
 invest in tracking/association, not just detection accuracy. An association-robust
-integration rule (confidence-weighting, outlier rejection, multi-hypothesis ids) is
-the natural design response and is left to future work.
+integration rule is the natural design response; §7.3 tests one.
+
+### 7.3 An association-robust aggregator (partial mitigation)
+
+The §7.2 failure is specific to the per-id **mean**, so we test a drop-in fix:
+`EgoMemRobust` keeps per-id observations and returns the coordinate-wise **median**,
+which tolerates a minority of outlier (mis-associated) positions. Table 6 compares
+it to mean-EgoMem (2-seed mean; rows `RESULTS.md` `exp_id = arkit-h5 *`).
+
+**Table 6. Mean vs. median aggregation under association error (real ARKitScenes).**
+
+| Condition | mean WM / VLA | median WM / VLA | median gate |
+|---|---|---|---|
+| clean (0,0,0) | 0.85 / 1.00 | 0.85 / 1.00 | CONFIRMED (no regression) |
+| assoc 0.2 | 0.22 / 0.46 | 0.38 / 0.57 | split (improved, still 1/2 seeds) |
+| assoc 0.5 | 0.03 / 0.23 | 0.16 / 0.32 | REJECTED (improved) |
+| noise 0.10 + miss 0.3 + assoc 0.2 | 0.11 / 0.33 | 0.28 / 0.53 | **CONFIRMED (recovered)** |
+
+The median is **identical to the mean on clean data** (no cost) and **strictly
+better in every degraded cell**. It **recovers the gate at the realistic combined
+operating point** (detection noise + dropout + 20 % swaps), which mean-EgoMem
+fails. It does *not* fully fix pure heavy association error (assoc 0.5 still
+rejected; assoc 0.2 still one-seed-unstable) — so the strict H5 claim (full
+restoration at assoc 0.2) is not met, but robust aggregation is a clear, free
+improvement and is shipped as `EgoMemRobust`. Closing the remaining gap needs
+explicit association handling (multi-hypothesis ids, appearance gating), left to
+future work.
 
 ## 8. Limitations
 
@@ -385,11 +412,14 @@ raw buffer widen as detections worsen, yielding a usable spec for a perception
 front-end (≈ 0.25 m position error, ≈ 0.4 recall). It is, however, **broken by
 association error** (§7.2, a reported negative result): correct object-identity
 tracking is the binding constraint, because per-id averaging propagates a wrong
-id's position rather than cancelling it. We release EgoMem as an installable
-library and CLI that reproduces every number reported here, as the buyer-side,
-neutral memory the literature has not yet offered. The clearest next steps are an
-association-robust integration rule and a real perception front-end (detector +
-monocular depth + tracking) at larger scale.
+id's position rather than cancelling it. A drop-in **median aggregator**
+(`EgoMemRobust`, §7.3) partially mitigates this — free on clean data, strictly
+better under swaps, and enough to recover the realistic combined operating point —
+though heavy association error still needs explicit handling. We release EgoMem
+(both aggregators) as an installable library and CLI that reproduces every number
+reported here, as the buyer-side, neutral memory the literature has not yet
+offered. The clearest next steps are stronger association handling and a real
+perception front-end (detector + monocular depth + tracking) at larger scale.
 
 ## References
 

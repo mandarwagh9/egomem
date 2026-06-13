@@ -17,9 +17,44 @@ import argparse, glob, json, os, sys
 import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "lib")))
-from egomem import NoMemory, NaiveBuffer, EgoMem, Observation, QueryState, Detection  # noqa: E402
+from egomem import (NoMemory, NaiveBuffer, EgoMem, Observation, QueryState, Detection,  # noqa: E402
+                    RecalledObject, to_world)
 
-MEMORIES = {"no-memory": NoMemory, "naive": NaiveBuffer, "egomem": EgoMem}
+
+class EgoMemRobust:
+    """H5 prototype: association-robust EgoMem. Keeps per-id world-position
+    observations and returns the coordinate-wise MEDIAN at query, which tolerates a
+    minority of mis-associated (wrong-id) detections that the per-id mean propagates."""
+    def __init__(self, default_conf=0.5, max_obs=128):
+        self.obs = {}
+        self.default_conf = default_conf
+        self.max_obs = max_obs
+
+    def write(self, obs):
+        for d in obs.detections:
+            Pw = to_world(d.pos_cam, obs.cam_pose)
+            e = self.obs.get(d.key())
+            if e is None:
+                e = dict(category=d.category, poss=[], last_seen_t=obs.t)
+                self.obs[d.key()] = e
+            e["poss"].append(Pw); e["last_seen_t"] = obs.t; e["category"] = d.category
+            if len(e["poss"]) > self.max_obs:
+                e["poss"].pop(0)
+
+    def query(self, state):
+        out = {d.key(): RecalledObject(d.key(), d.category, np.asarray(d.pos_cam, float),
+                                       state.t, d.confidence, True) for d in state.visible}
+        vis = set(out)
+        for k, e in self.obs.items():
+            if k not in vis:
+                med = np.median(np.array(e["poss"]), axis=0)
+                R, c = state.cam_pose[:3, :3], state.cam_pose[:3, 3]
+                out[k] = RecalledObject(k, e["category"], R.T @ (med - c), e["last_seen_t"],
+                                        self.default_conf, False)
+        return list(out.values())
+
+
+MEMORIES = {"no-memory": NoMemory, "naive": NaiveBuffer, "egomem": EgoMem, "egomem-robust": EgoMemRobust}
 SUBSAMPLE = 20
 MAX_RANGE = 8.0
 
@@ -284,11 +319,17 @@ def main():
             res[arm] = dict(ntr=len(Xtr), nte=len(Xte), wm_s=wm_s, wm_e=wm_e, vl_s=vl_s, vl_e=vl_e)
             print(f"  [{arm:9s}] train_q={len(Xtr):4d} test_q={len(Xte):4d} | "
                   f"WM succ={wm_s:.3f} err={wm_e:.2f}m | VLA succ={vl_s:.3f} err={vl_e:.1f}deg")
-        nm, na, eg = res["no-memory"], res["naive"], res["egomem"]
-        wm_pass = eg["wm_s"] >= nm["wm_s"] + 0.20 and eg["wm_s"] >= na["wm_s"]
-        vl_pass = eg["vl_s"] >= nm["vl_s"] + 0.20 and eg["vl_s"] >= na["vl_s"]
-        print(f"  check: WM {'PASS' if wm_pass else 'FAIL'} | VLA {'PASS' if vl_pass else 'FAIL'} -> "
-              f"{'CONFIRMED' if (wm_pass and vl_pass) else 'REJECTED'}")
+        nm, na = res["no-memory"], res["naive"]
+        def gate(arm):
+            a = res[arm]
+            wp = a["wm_s"] >= nm["wm_s"] + 0.20 and a["wm_s"] >= na["wm_s"]
+            vp = a["vl_s"] >= nm["vl_s"] + 0.20 and a["vl_s"] >= na["vl_s"]
+            return wp, vp
+        for arm in ("egomem", "egomem-robust"):
+            if arm in res:
+                wp, vp = gate(arm)
+                print(f"  {arm} check: WM {'PASS' if wp else 'FAIL'} | VLA {'PASS' if vp else 'FAIL'} -> "
+                      f"{'CONFIRMED' if (wp and vp) else 'REJECTED'}")
 
 
 if __name__ == "__main__":

@@ -136,11 +136,24 @@ another object's id — right detection, wrong track). Swept assoc {0.2, 0.5} al
 - Honest negative result, fully reported (paper §7.2, abstract, conclusion,
   limitations). Sharp product spec: invest in tracking/association quality.
 
-### Next (Cycle 5, optional — not started)
-(a) An **association-robust integration rule** for EgoMem (confidence-weighting /
-outlier rejection / multi-hypothesis ids) and re-test against H4's assoc sweep;
-and/or (b) a **real perception front-end** (detector + monocular depth + tracker)
-meeting the §7.1 envelope AND the §7.2 association bar, at larger scale (GCP+GPU).
+**CYCLE 5 COMPLETE — H5 partial mitigation; `EgoMemRobust` shipped.** Paper §7.3
+(Table 6).
+
+### H5 result (association-robust aggregator, 2026-06-14)
+Prototyped + validated a median (vs mean) per-id aggregator, then promoted to the
+library as `EgoMemRobust` (lib v0.2.0; NOT added to sim's MEMORIES so the 3-arm
+reproduction is unchanged — verified `egomem sim --seed 0` identical).
+- **Median = mean on clean data** (0.85/1.00, no regression) and **strictly better
+  in every degraded cell**. **Recovers the gate** at the realistic combined cell
+  (noise0.10+miss0.3+assoc0.2: CONFIRMED both seeds, where mean was REJECTED).
+- Does NOT fully fix pure heavy association error (assoc0.5 still rejected; assoc0.2
+  one-seed-unstable) → strict H5 not met, but a clear free win → shipped. 6 RESULTS
+  rows; `stdout_h5.log`; paper §7.3 + abstract/conclusion.
+
+### Next (Cycle 6, optional — not started)
+Explicit association handling (multi-hypothesis ids / appearance gating) to close
+the heavy-assoc gap; and/or a real perception front-end (detector + monocular depth
++ tracker) at larger scale (GCP+GPU), meeting the §7.1 envelope AND §7.2 assoc bar.
 
 (Cycle-1 history below.)
 
@@ -222,6 +235,21 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-14 — H5 partial mitigation: EgoMemRobust shipped (Cycle 5 COMPLETE)
+- **Did:** Prototyped median per-id aggregator in the loader (4th arm), swept clean
+  + H4 assoc cells. Median strictly improves over mean everywhere, identical on
+  clean data, and recovers the realistic combined cell (CONFIRMED both seeds).
+  Promoted to `lib/egomem` as `EgoMemRobust` (v0.2.0, exported; MEMORIES unchanged
+  so sim reproduction identical — verified). Smoke-tested (median ignores swapped
+  outliers). 6 RESULTS rows; `stdout_h5.log`; paper §7.3 (Table 6) + abstract/
+  conclusion/limitations.
+- **Result:** strict H5 (full restoration at assoc0.2) NOT met, but robust agg is a
+  free, consistent improvement that rescues the realistic operating point → shipped.
+- **Finding:** the H4 negative now has a partial fix; heavy association still open.
+  Five cycles done.
+- **Next task:** none in-loop (Cycle 6 optional: explicit association handling).
+- **Blocker:** none.
 
 ### 2026-06-14 — H4 REJECTED: association errors break EgoMem (Cycle 4 COMPLETE)
 - **Did:** Opened Cycle 4 (`hypothesis_h4.md`); added `--assoc_error` (wrong-id
@@ -436,7 +464,7 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ---
 
-STATUS: CYCLES 1–4 COMPLETE
+STATUS: CYCLES 1–5 COMPLETE
 
 Cycle 1 (synthetic, 2026-06-13): EgoMem invented, validated (3-seed defended
 result with a characterized pose-drift failure boundary), packaged as an
@@ -461,5 +489,11 @@ Core claim supported with honest scope: a model-agnostic memory from egocentric
 video helps both a world model and a VLA on out-of-view recall, on synthetic AND
 real data, robust to detection noise/dropout, with two characterized failure modes
 (heavy pose drift §6; association error §7.2). Every number in RESULTS.md / paper
-came from a real run logged this loop. Optional future (Cycle 5): association-robust
-integration rule; real detector + monocular depth + tracker at larger scale (GPU).
+came from a real run logged this loop.
+
+Cycle 5 (mitigation, 2026-06-14): `EgoMemRobust` (per-id median) shipped — free on
+clean data, strictly better under association error, recovers the realistic
+operating point (paper §7.3). Heavy pure association error still open.
+
+Optional future (Cycle 6): explicit association handling (multi-hypothesis ids);
+real detector + monocular depth + tracker at larger scale (GPU).
