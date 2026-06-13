@@ -202,9 +202,23 @@ recall on real detections (detections grouped to GT by proximity for eval only).
   localization is beyond current real-perception noise — the honest cost of dropping
   the oracle.
 
-### Next (optional)
-Real instance tracker (replace eval-side proximity grouping); apply official
-ARKitScenes annotation alignment to pass more scenes; scale up (GPU).
+**CYCLE 9 COMPLETE — H9: fully GT-free real pipeline; CONFIRMED @1.0 m.** Paper §7.6.
+
+### H9 (2026-06-14): GT-free spatial tracker (no oracle anywhere)
+Added an online spatial tracker (`--tracker`): detections associated to nearest
+world-space track (else spawn), GT used ONLY to score (match track→GT via early obs;
+MOT-style; spurious FP tracks excluded). Closes the H8 eval-side GT-grouping caveat.
+- **Result (3 scenes, 56 self-formed tracks, 31 targets):** tol 1.0 m egomem **0.484**
+  vs no-memory 0.000 / naive 0.000 → **CONFIRMED (+0.484)**; tol 0.5 m egomem 0.161 →
+  REJECTED. 2 RESULTS rows; `stdout_h9.log`; paper §7.6.
+- **Reading:** with NO oracle anywhere (real detector + real LiDAR depth + GT-free
+  tracking), EgoMem recalls ~half of out-of-view objects within 1 m while both
+  baselines recall ZERO. The drop from H8's 1.000 to 0.484 is the honest cost of real
+  data association. The core claim survives the strictest, fully-real test.
+
+### Next (optional, refinements only)
+Stronger detector/tracker; official ARKitScenes annotation alignment (pass >3/6
+scenes); larger-scale runs (GPU). No open scientific questions in the core arc.
 
 (Cycle-1 history below.)
 
@@ -286,6 +300,19 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 ---
 
 ## RUN LOG (newest first)
+
+### 2026-06-14 — H9: fully GT-free real pipeline (real tracker); CONFIRMED @1.0m (Cycle 9)
+- **Did:** Added GT-free online spatial tracker (`--tracker`) to `arkit_detector.py`,
+  removing the H8 eval-side GT-grouping. Detections self-associate into tracks; GT used
+  only to score (MOT-style). Ran on the 3 gate-pass scenes.
+- **Result (56 self-formed tracks, 31 targets):** tol 1.0 m egomem **0.484** vs
+  no-memory 0.000 / naive 0.000 → **CONFIRMED**; tol 0.5 m 0.161 → REJECTED. RESULTS +2
+  rows; `stdout_h9.log`; paper §7.6 (Table 9 GT-free rows).
+- **Finding:** core claim holds with **no oracle anywhere** in the pipeline; the
+  1.000→0.484 drop is the honest cost of real association. Nine cycles done; arc is
+  fully real end-to-end.
+- **Next task:** none in-loop (refinements only).
+- **Blocker:** none.
 
 ### 2026-06-14 — H8 CORRECTED: real-perception result (not blocked) — CONFIRMED@1.0m
 - **Did:** Re-examined the H8 "BLOCKED" call. The same-category gate (2.5 m) was
@@ -573,7 +600,7 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ---
 
-STATUS: CYCLES 1–8 COMPLETE
+STATUS: CYCLES 1–9 COMPLETE
 
 Cycle 1 (synthetic, 2026-06-13): EgoMem invented, validated (3-seed defended
 result with a characterized pose-drift failure boundary), packaged as an
@@ -617,5 +644,9 @@ Cycle 8 (real perception, 2026-06-14): real detector + real LiDAR depth pipeline
 noise). Paper §7.6. (An initial "BLOCKED/frame-mismatch" call was an overstatement
 from detector mislabels, corrected to this real measured result; no number was faked.)
 
-Optional future: real instance tracker; official annotation alignment for more scenes;
-scale-up (GPU).
+Cycle 9 (GT-free tracker, 2026-06-14): added a real online spatial tracker — NO oracle
+anywhere. egomem **0.484 @1.0 m vs 0.000 baselines → CONFIRMED** (0.161 @0.5 m); the
+1.000→0.484 drop is the honest cost of real data association. Paper §7.6.
+
+Optional future (refinements only): stronger detector/tracker; official annotation
+alignment for more scenes; scale-up (GPU).

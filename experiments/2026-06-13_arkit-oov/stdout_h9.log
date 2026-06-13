@@ -1,0 +1,18 @@
+scenes with RGB+depth: ['41069021', '41069025', '41069042', '41069046', '41125709', '41125718']
+  41069021: 160 real detections over 94 frames; GT cats=['cabinet', 'chair', 'oven', 'sofa', 'table', 'tv_monitor']
+  41069025: 101 real detections over 84 frames; GT cats=['cabinet', 'chair', 'oven', 'sink', 'sofa', 'stove', 'table', 'tv_monitor']
+  41069042: 30 real detections over 49 frames; GT cats=['bed', 'cabinet', 'table', 'tv_monitor']
+  41069046: 34 real detections over 60 frames; GT cats=['bed', 'cabinet', 'table', 'tv_monitor']
+  41125709: 38 real detections over 55 frames; GT cats=['cabinet', 'chair', 'oven', 'sink', 'sofa', 'table', 'tv_monitor']
+  41125718: 26 real detections over 52 frames; GT cats=['bed', 'cabinet']
+=== back-projection validation gate ===
+  41069021: best variant=y+,z+ median_to_anyGT=1.23m frac<1.5m=0.74 (n=160) -> PASS
+  41069025: best variant=y-,z- median_to_anyGT=1.38m frac<1.5m=0.60 (n=101) -> PASS
+  41069042: best variant=y+,z+ median_to_anyGT=0.89m frac<1.5m=0.67 (n=30) -> PASS
+  41069046: best variant=y-,z- median_to_anyGT=2.61m frac<1.5m=0.35 (n=34) -> FAIL
+  41125709: best variant=y+,z+ median_to_anyGT=3.59m frac<1.5m=0.08 (n=38) -> FAIL
+  41125718: best variant=y+,z+ median_to_anyGT=3.11m frac<1.5m=0.19 (n=26) -> FAIL
+=== H9 out-of-view recall (REAL detector + REAL depth + GT-FREE tracking) ===
+  GT-free tracks formed=56 | scored out-of-view targets=31 (3 scenes)
+  tol=0.5m | no-memory=0.000 naive=0.000 egomem=0.161 | egomem-no_mem=+0.161 -> REJECTED
+  tol=1.0m | no-memory=0.000 naive=0.000 egomem=0.484 | egomem-no_mem=+0.484 -> CONFIRMED

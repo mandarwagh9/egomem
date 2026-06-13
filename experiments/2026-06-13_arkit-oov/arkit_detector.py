@@ -202,12 +202,69 @@ def recall_eval(scenes, variant, tols=(0.5, 1.0)):
     return out
 
 
+def form_tracks(world, gate=0.8):
+    """GT-free online spatial association: each detection -> nearest track (median
+    pos) within `gate`, else a new track. world = [(Pw, fi, cat, pc)] (pc = the
+    detection's camera-frame point at its own frame)."""
+    tracks = []
+    for Pw, fi, cat, pc in sorted(world, key=lambda w: w[1]):
+        best, bd = None, gate
+        for tr in tracks:
+            d = float(np.linalg.norm(np.median(np.array(tr["poss"]), axis=0) - Pw))
+            if d < bd:
+                bd, best = d, tr
+        if best is None:
+            best = dict(poss=[], fis=[], cats={}, last_pc=None, last_fi=-1); tracks.append(best)
+        best["poss"].append(Pw); best["fis"].append(fi)
+        best["cats"][cat] = best["cats"].get(cat, 0) + 1
+        if fi >= best["last_fi"]:
+            best["last_fi"], best["last_pc"] = fi, pc
+    return tracks
+
+
+def tracker_recall(scenes, variant, tols=(0.5, 1.0), gate=0.8, match=1.5):
+    """H9: out-of-view recall with GT-free spatial tracking. GT used only to score
+    (match a track to a GT object via its EARLY observations)."""
+    out = {t: {"no-memory": [], "naive": [], "egomem": []} for t in tols}
+    n_tracks = 0
+    for sc in scenes:
+        intr = sc["intr"]; gt = sc["gt"]
+        vv = sc.get("variant", variant)
+        world = [(to_world(backproj(u, v, Z, intr, vv[1], vv[2]), pose), fi, cat,
+                  backproj(u, v, Z, intr, vv[1], vv[2]))
+                 for (cat, u, v, Z, pose, fi) in sc["dets"]]
+        if not world:
+            continue
+        maxfi = max(w[1] for w in world)
+        final_pose = next(d[4] for d in sc["dets"] if d[5] == maxfi)
+        tracks = form_tracks(world, gate)
+        n_tracks += len(tracks)
+        for tr in tracks:
+            early = [p for p, fi in zip(tr["poss"], tr["fis"]) if fi < maxfi]
+            at_final = any(fi == maxfi for fi in tr["fis"])
+            if not early or at_final:
+                continue                                 # need: seen earlier, out of view now
+            early_pos = np.median(np.array(early), axis=0)
+            gpos = min(gt, key=lambda g: np.linalg.norm(g["pos"] - early_pos))
+            if np.linalg.norm(gpos["pos"] - early_pos) > match:
+                continue                                 # spurious track (no GT) -> not a recall target
+            true_cam = to_cam(gpos["pos"], final_pose)
+            est_cam = to_cam(np.median(np.array(tr["poss"]), axis=0), final_pose)
+            naive_cam = tr["last_pc"]                     # last detection, un-transformed (stale frame)
+            for t in tols:
+                out[t]["no-memory"].append(0.0)          # no final-frame detection of this track
+                out[t]["egomem"].append(1.0 if np.linalg.norm(est_cam - true_cam) <= t else 0.0)
+                out[t]["naive"].append(1.0 if np.linalg.norm(naive_cam - true_cam) <= t else 0.0)
+    return out, n_tracks
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scenes_dir", required=True)
     ap.add_argument("--scenes", nargs="+", default=None, help="specific video_ids")
     ap.add_argument("--gate_only", action="store_true")
     ap.add_argument("--debug", action="store_true")
+    ap.add_argument("--tracker", action="store_true", help="H9: GT-free spatial tracking (no proximity-to-GT grouping)")
     args = ap.parse_args()
 
     dirs = sorted(d for d in glob.glob(os.path.join(args.scenes_dir, "*")) if os.path.isdir(d))
@@ -263,6 +320,22 @@ def main():
         return
 
     var = ok_scenes[0]["variant"]
+    if args.tracker:
+        print(f"\n=== H9 out-of-view recall (REAL detector + REAL depth + GT-FREE tracking) ===")
+        res, ntr = tracker_recall(ok_scenes, var)
+        tols = sorted(res)
+        n = len(res[tols[0]]["egomem"])
+        print(f"  GT-free tracks formed={ntr} | scored out-of-view targets={n} ({len(ok_scenes)} scenes)")
+        if n == 0:
+            print("STATUS: INCONCLUSIVE — no out-of-view targets after GT-free tracking.")
+            return
+        for t in tols:
+            r = res[t]
+            nm = float(np.mean(r["no-memory"])); na = float(np.mean(r["naive"])); eg = float(np.mean(r["egomem"]))
+            verdict = "CONFIRMED" if (eg >= nm + 0.20 and eg >= na) else "REJECTED"
+            print(f"  tol={t:.1f}m | no-memory={nm:.3f} naive={na:.3f} egomem={eg:.3f} | "
+                  f"egomem-no_mem={eg-nm:+.3f} -> {verdict}")
+        return
     print(f"\n=== H8 out-of-view recall (REAL detector + REAL depth) variant={var[0]} ===")
     res = recall_eval(ok_scenes, var)
     tols = sorted(res)

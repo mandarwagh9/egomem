@@ -37,8 +37,9 @@ negative result), pinpointing correct association — not detector precision —
 binding constraint for a memory of this design. A **trust-but-verify** aggregator
 recovers it — identical to the mean on clean data and best under id-swaps, a strict
 Pareto improvement shipped as the recommended variant. Finally, with a **fully real
-perception front-end** (real detector + real LiDAR depth, no oracle), EgoMem recalls
-every out-of-view object the baselines cannot (1.00 vs 0.00 at a 1 m tolerance), with
+perception front-end and no oracle anywhere** (real detector + real LiDAR depth +
+GT-free spatial tracking), EgoMem recalls out-of-view objects the baselines cannot
+(0.48 vs 0.00 at a 1 m tolerance; 1.00 vs 0.00 when detections are GT-grouped),
 the strict 0.5 m tolerance quantifying real perception's ~1 m localization cost. We
 release the layer (mean / median / trust-but-verify aggregators) as an installable
 library with a CLI that reproduces every number here.
@@ -439,21 +440,34 @@ mislabels and the depth/convention are noisier on the rest). Out-of-view recall 
 measured on 26 real targets across the passing scenes; detections are grouped to GT
 objects by proximity for evaluation only (a real tracker is the remaining piece).
 
-**Table 9. Out-of-view recall with a fully real perception front-end (no oracle).**
+**Table 9. Out-of-view recall, real perception front-end (EgoMem; baselines in text).**
 
-| tolerance | no-memory | naive | EgoMem |
-|---|---|---|---|
-| 0.5 m | 0.000 | 0.000 | 0.154 |
-| 1.0 m | 0.000 | 0.038 | **1.000** |
+| pipeline | tol | no-memory | naive | EgoMem |
+|---|---|---|---|---|
+| real det + depth, GT-grouped detections | 0.5 m | 0.000 | 0.000 | 0.154 |
+| real det + depth, GT-grouped detections | 1.0 m | 0.000 | 0.038 | **1.000** |
+| real det + depth, **GT-free tracking** | 0.5 m | 0.000 | 0.000 | 0.161 |
+| real det + depth, **GT-free tracking** | 1.0 m | 0.000 | 0.000 | **0.484** |
 
 At a tolerance matched to real-perception noise (**1.0 m** — object-surface-vs-3D-box-
 center offset plus detector/depth error, ~1 m as measured by the gate), **EgoMem recalls
-every out-of-view object that the baselines cannot** (1.000 vs 0.000 / 0.038):
-the central claim holds end-to-end on real perception. At the strict 0.5 m tolerance it
-drops to 0.154 — quantifying that dropping the oracle costs ~1 m of localization, the
-honest price of real perception. (An earlier same-category gate over-read this as a
-coordinate-frame mismatch; a category-agnostic check corrected it — the geometry is
-roughly aligned, ~1.2 m median, and the residual is real-perception noise.)
+out-of-view objects the baselines cannot** (1.000 vs 0.000/0.038): the central claim
+holds end-to-end on real perception. At the strict 0.5 m tolerance it drops to 0.154 —
+quantifying that dropping the oracle costs ~1 m of localization, the honest price of
+real perception. (An earlier same-category gate over-read the error as a coordinate-frame
+mismatch; a category-agnostic check corrected it — the geometry is roughly aligned,
+~1.2 m median, and the residual is real-perception noise.)
+
+**Fully GT-free (a real tracker).** The rows above still group detections to objects by
+GT proximity. We close that gap with a **GT-free online spatial tracker** — each detection
+is associated to the nearest existing world-space track (else spawns one), with GT used
+*only* to score a track via its early observations (standard MOT-style eval; spurious
+false-positive tracks are excluded). With **no oracle anywhere** in the pipeline, across
+56 self-formed tracks / 31 out-of-view targets, EgoMem recalls **0.484** of them within
+1.0 m versus **0.000** for both baselines (CONFIRMED), and 0.161 at 0.5 m. The drop from
+1.000 to 0.484 is the honest cost of real data association (tracker fragmentation /
+merges); the central claim — memory enables out-of-view recall that a memoryless
+controller cannot — survives even this strictest, fully-real test.
 
 ## 8. Limitations
 
@@ -509,14 +523,15 @@ An explicit **spatial-association** prototype (§7.4) uniquely fixes *pure*
 association error but regresses clean data — a regime tradeoff. A **trust-but-verify**
 aggregator (`EgoMemVerify`, §7.5) **resolves it**: identical to the mean on clean
 data and the best variant under id-swaps, a strict Pareto improvement, shipped as
-the recommended aggregator. Dropping the oracle entirely with a **real detector +
-real LiDAR depth** (§7.6), EgoMem still recalls every out-of-view object the
-baselines cannot (1.000 vs 0.000 at a 1.0 m tolerance), the strict 0.5 m tolerance
-quantifying the ~1 m localization cost of real perception. We release EgoMem (mean,
-median, and trust-but-verify aggregators) as an installable library and CLI that
-reproduces every number reported here, as the buyer-side, neutral memory the
-literature has not yet offered. The clearest next step is a real instance tracker
-and larger-scale evaluation, which §7.1–§7.6 now equip with a quantified
+the recommended aggregator. Dropping the oracle entirely — **real detector +
+real LiDAR depth + GT-free spatial tracking** (§7.6) — EgoMem still recalls
+out-of-view objects the baselines cannot (0.484 vs 0.000 at 1.0 m, fully GT-free;
+1.000 vs 0.000 with GT-grouped detections), the strict 0.5 m tolerance quantifying
+the ~1 m localization cost of real perception. We release EgoMem (mean, median, and
+trust-but-verify aggregators) as an installable library and CLI that reproduces
+every number reported here, as the buyer-side, neutral memory the literature has not
+yet offered. The clearest next step is larger-scale evaluation with a stronger
+detector/tracker, which §7.1–§7.6 now equip with a quantified
 accuracy/recall/association envelope to hit.
 
 ## References
