@@ -1,0 +1,17 @@
+{
+  "experiment": "EgoMem Cycle 2 / H2 - real-data out-of-view recall",
+  "date_run": "2026-06-14",
+  "dataset": "ARKitScenes 3dod (Validation fold)",
+  "cdn_base": "https://docs-assets.developer.apple.com/ml-research/datasets/arkitscenes/v1/threedod/Validation/{video_id}.zip",
+  "scene_ids": ["41069021","41069025","41069042","41069043","41069046","41069048","41069050","41069051","41125696","41125709","41125718","41125722","41125731","41125756"],
+  "n_scenes": 14,
+  "gate": "14/14 scenes passed projection validation (box centroids project in-image at positive depth, sane partial-visibility); OBB centroid units = cm (/100 -> m), same world frame as trajectory (verified)",
+  "subsample_every": 20,
+  "max_range_m": 8.0,
+  "pos_tol_m": 0.5,
+  "dir_tol_deg": 30.0,
+  "threshold_pp": 20,
+  "seeds": [0, 1],
+  "library": "egomem (lib/, unchanged from Cycle 1)",
+  "notes": "Read-heads + arms reused verbatim from the shipped library. Oracle data association (object id + 3D box from annotations); projection convention auto-selected per scene by max in-image visibility (see limitations). Raw output: stdout_arkit.log"
+}

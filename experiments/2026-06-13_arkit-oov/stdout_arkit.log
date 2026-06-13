@@ -1,0 +1,32 @@
+loaded 14 scenes: ['41069021', '41069025', '41069042', '41069043', '41069046', '41069048', '41069050', '41069051', '41125696', '41125709', '41125718', '41125722', '41125731', '41125756']
+
+=== projection validation gate (per scene) ===
+  41069021: conv=fwd+z,v+  objs_seen=18/18 partial=18 total_vis=182 frames=94 -> PASS
+  41069025: conv=fwd-z,v+  objs_seen=17/20 partial=17 total_vis=142 frames=84 -> PASS
+  41069042: conv=fwd+z,v+  objs_seen=6/6 partial=6 total_vis=40 frames=49 -> PASS
+  41069043: conv=fwd+z,v+  objs_seen=6/6 partial=6 total_vis=20 frames=49 -> PASS
+  41069046: conv=fwd-z,v+  objs_seen=8/8 partial=8 total_vis=62 frames=60 -> PASS
+  41069048: conv=fwd+z,v+  objs_seen=3/3 partial=3 total_vis=6 frames=17 -> PASS
+  41069050: conv=fwd+z,v+  objs_seen=3/3 partial=3 total_vis=3 frames=16 -> PASS
+  41069051: conv=fwd-z,v+  objs_seen=3/3 partial=3 total_vis=8 frames=33 -> PASS
+  41125696: conv=fwd-z,v-  objs_seen=15/16 partial=15 total_vis=72 frames=61 -> PASS
+  41125709: conv=fwd-z,v+  objs_seen=15/17 partial=15 total_vis=73 frames=55 -> PASS
+  41125718: conv=fwd-z,v+  objs_seen=3/4 partial=3 total_vis=12 frames=52 -> PASS
+  41125722: conv=fwd+z,v+  objs_seen=3/4 partial=3 total_vis=7 frames=52 -> PASS
+  41125731: conv=fwd+z,v+  objs_seen=3/4 partial=3 total_vis=10 frames=42 -> PASS
+  41125756: conv=fwd+z,v+  objs_seen=4/4 partial=4 total_vis=7 frames=28 -> PASS
+gate: 14/14 scenes pass; dominant convention = fwd+z,v+
+
+=== H2 out-of-view recall (real ARKitScenes) ===
+
+-- seed 0: 10 train / 4 test scenes --
+  [no-memory] train_q=  61 test_q=  33 | WM succ=0.000 err=2.89m | VLA succ=0.000 err=92.7deg
+  [naive    ] train_q=  61 test_q=  33 | WM succ=0.030 err=3.69m | VLA succ=0.030 err=104.9deg
+  [egomem   ] train_q=  61 test_q=  33 | WM succ=0.697 err=0.38m | VLA succ=1.000 err=5.2deg
+  H2 check: WM PASS | VLA PASS -> CONFIRMED
+
+-- seed 1: 10 train / 4 test scenes --
+  [no-memory] train_q=  63 test_q=  31 | WM succ=0.032 err=2.29m | VLA succ=0.032 err=97.3deg
+  [naive    ] train_q=  63 test_q=  31 | WM succ=0.032 err=2.69m | VLA succ=0.032 err=84.7deg
+  [egomem   ] train_q=  63 test_q=  31 | WM succ=1.000 err=0.17m | VLA succ=1.000 err=4.7deg
+  H2 check: WM PASS | VLA PASS -> CONFIRMED
