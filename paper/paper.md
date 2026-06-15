@@ -549,7 +549,12 @@ spatial facts from pixels, not the questions. Because the VLM is frozen and unmo
 a direct demonstration of the model-agnostic value: *any* VLM gains episodic-spatial competence
 by reading EgoMem. (Caveats: 55 questions / 6 scenes; templated GT-derived questions, not
 human-authored OpenEQA items; the memory is built from GT object positions replayed through the
-real trajectory — pairing it with the real-detector pipeline of §7.6 is the next step.)
+real trajectory. We attempted the fully no-oracle path — building the QA memory from the real
+detector + depth pipeline of §7.6 — but on the 256×192 lowres ARKitScenes frames the CPU
+detector is too weak (3/6 scenes pass the back-projection gate; 1–4 noisy/mislabelled tracks vs
+6–20 GT objects), so that path is *detector-limited*, not memory-limited; it needs higher-res
+frames and a stronger detector/tracker (a GPU-scale follow-up), consistent with §7.6's finding
+that the perception front-end is the bottleneck.)
 
 ## 10. Limitations
 

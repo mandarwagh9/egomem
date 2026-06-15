@@ -1,0 +1,6 @@
+[41069021] GATE FAIL {'variant': 'y+,z+', 'median': 2.8409826602083172, 'frac': 0.42857142857142855, 'n': 7}  GT={'label': 18}
+[41069025] gate y+,z+ frac=0.67 | real-mem tracks=4 {'tv_monitor': 1, 'sink': 1, 'sofa': 1, 'refrigerator': 1} | GT {'label': 20}
+[41069042] gate y+,z+ frac=1.00 | real-mem tracks=1 {'bed': 1} | GT {'label': 6}
+[41069046] gate y+,z- frac=1.00 | real-mem tracks=1 {'bed': 1} | GT {'label': 8}
+[41125709] GATE FAIL None  GT={'label': 17}
+[41125718] GATE FAIL {'variant': 'y+,z+', 'median': 3.4698719195180825, 'frac': 0.3333333333333333, 'n': 3}  GT={'label': 4}

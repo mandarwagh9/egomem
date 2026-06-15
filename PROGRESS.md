@@ -317,6 +317,21 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## RUN LOG (newest first)
 
+### 2026-06-15 — Explored no-oracle QA (real-detector memory) — detector-limited, scoped out
+- **Did:** Built `experiments/2026-06-15_spatial-qa/real_mem.py` to source the QA memory from
+  the REAL detector+depth pipeline (H8/H9) instead of GT positions — the fully no-oracle path.
+  Validated per scene (`real_mem_val.log`).
+- **Finding (honest negative/scoping):** the CPU detector on 256×192 lowres ARKitScenes frames
+  is too weak — only **3/6 scenes pass** the back-projection gate, and passing scenes yield
+  **1–4 noisy/mislabelled tracks vs 6–20 GT objects** (e.g. "bed" in a living room). So a
+  no-oracle QA would be **detector-limited, not memory-limited** — it would re-confirm §7.6/H8-H9
+  ("perception is the bottleneck"), not advance the EgoMem thesis. Needs higher-res frames +
+  stronger detector (GPU follow-up). Documented as a paper §9 caveat; not pursued further now.
+- **Conclusion:** Cycle 11's strong, defensible result stands at **H11b** (GT-memory: EgoMem
+  beats a VLM-that-sees by +43.6 pts). Real-detector QA deferred to a GPU-scale follow-up.
+- **Next (loop):** consolidate (README/demo for the QA result) OR pull a real OpenEQA slice for a
+  literally-comparable number OR a different SOTA direction.
+
 ### 2026-06-15 — Cycle 11 / H11b: EgoMem beats a VLM that SEES the room (true OpenEQA setting)
 - **Did (autonomous /loop):** Added a **vision-frames** condition to `spatial_qa.py` — the
   frozen VLM is shown 5 sampled egocentric photos (the actual OpenEQA setting), vs EgoMem's
