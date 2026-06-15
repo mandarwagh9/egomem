@@ -1,0 +1,80 @@
+
+[41069021] 18 objs, mem=18 frame=0, 11 questions
+  running acc: {'no-memory': '3/11', 'frame-only': '4/11', 'egomem': '10/11'}
+
+[41069025] 20 objs, mem=20 frame=12, 11 questions
+  running acc: {'no-memory': '5/22', 'frame-only': '9/22', 'egomem': '21/22'}
+
+[41069042] 6 objs, mem=6 frame=3, 9 questions
+  running acc: {'no-memory': '8/31', 'frame-only': '15/31', 'egomem': '29/31'}
+
+[41069043] 6 objs, mem=6 frame=5, 9 questions
+  running acc: {'no-memory': '11/40', 'frame-only': '22/40', 'egomem': '37/40'}
+
+[41069046] 8 objs, mem=8 frame=4, 9 questions
+  API error: [WinError 10053] An established connection was aborted by the software in your host machine
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  running acc: {'no-memory': '12/49', 'frame-only': '23/49', 'egomem': '40/49'}
+
+[41069048] 3 objs, mem=3 frame=3, 11 questions
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  API error: [Errno 11001] getaddrinfo failed
+  running acc: {'no-memory': '13/60', 'frame-only': '24/60', 'egomem': '41/60'}
+
+=== H11 episodic-spatial QA — accuracy by condition (real model: gemini-2.5-flash ) ===
+  no-memory  acc=0.217 (13/60)  [closest:1/6 count:0/12 exists:6/12 fb:3/15 lr:3/15]
+  frame-only acc=0.400 (24/60)  [closest:0/6 count:2/12 exists:9/12 fb:10/15 lr:3/15]
+  egomem     acc=0.683 (41/60)  [closest:1/6 count:10/12 exists:10/12 fb:10/15 lr:10/15]
+
+  egomem - no-memory = +0.467 | egomem - frame-only = +0.283
+  H11 (egomem >= no-memory + 0.20 AND >= frame-only): CONFIRMED

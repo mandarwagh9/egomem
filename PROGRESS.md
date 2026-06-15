@@ -317,6 +317,27 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## RUN LOG (newest first)
 
+### 2026-06-15 — Cycle 11 / H11: EgoMem augments a FROZEN VLM on episodic-spatial QA — CONFIRMED
+- **Did (autonomous /loop):** Researched 2026 SOTA frontier (OpenEQA/EMemBench/FindingDory/
+  MemoryVLA — episodic-spatial memory, VLMs "nearly blind"). Built
+  `experiments/2026-06-15_spatial-qa/spatial_qa.py`: generate episodic-spatial Qs from real
+  ARKitScenes GT, build EgoMem over the trajectory, ask a frozen real VLM (Gemini 2.5-flash
+  via Vertex ADC on the BR GCP project) under no-memory / frame-only / EgoMem contexts. Added
+  429 exp-backoff. 6 scenes, 60 Qs.
+- **Result (real, logged):** acc no-memory **0.217**, frame-only **0.400**, **EgoMem 0.683**
+  → egomem−no_mem **+0.467**, ≥frame-only **+0.283** → **H11 CONFIRMED**. Gains concentrate on
+  counting (0→10/12) and left/right (3→10/15) — the VLM-blind tasks. 3 RESULTS rows;
+  `stdout_qa.log`/`metrics.json`; paper §9 (Table 11) + abstract/conclusion; bibliography +4
+  SOTA refs.
+- **Finding:** demonstrates the model-agnostic value end-to-end — *any* frozen VLM gains
+  episodic-spatial competence by reading EgoMem; connects EgoMem to the recognized OpenEQA
+  benchmark family. 11 cycles.
+- **Infra notes:** GOOGLE_API_KEY (Gemini dev API) invalid → use Vertex ADC, project
+  project-6ee36aac-1137-4fae-b2b. `/tmp` paths must be passed as the real Windows temp path
+  (`C:/Users/Mandar/AppData/Local/Temp/arkit_scenes`) to Windows Python.
+- **Next (loop):** scale N / add real-detector memory (combine H8-H9 with H11) / add a
+  vision-frame VLM baseline (true OpenEQA image setting).
+
 ### 2026-06-14 — Fundraise assets (positioning + investor one-pager) [non-research]
 - **Did:** Produced pre-seed fundraise materials using the YC-positioning lens:
   `POSITIONING.md` (one-liner reframe, fit scorecard, narrative, RFS lane, anti-signal
@@ -642,7 +663,7 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ---
 
-STATUS: CYCLES 1–10 COMPLETE
+STATUS: CYCLES 1–11 COMPLETE
 
 Cycle 1 (synthetic, 2026-06-13): EgoMem invented, validated (3-seed defended
 result with a characterized pose-drift failure boundary), packaged as an

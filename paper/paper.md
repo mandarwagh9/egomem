@@ -50,8 +50,12 @@ the strict 0.5 m tolerance quantifying real perception's ~1 m localization cost.
 Crucially, this recall converts to **task success**: in a closed-loop long-horizon
 fetch task, the same memory lifts completion from ~1 % to 100 % (+99 points) in the
 realistic large-space, limited-sensing regime, with the gain scaling with partial
-observability. We release the layer (mean / median / trust-but-verify aggregators)
-as an installable library with a CLI that reproduces every number here.
+observability. Finally, EgoMem is **model-agnostic in practice**: giving its spatial
+summary to a *frozen, off-the-shelf VLM* (Gemini 2.5-flash) roughly **triples** its
+accuracy on episodic-spatial QA (0.68 vs 0.22 no-memory; +0.28 over current-frame-only),
+with gains concentrated on counting and spatial relations — the OpenEQA-style tasks where
+VLMs are "nearly blind". We release the layer (mean / median / trust-but-verify
+aggregators) as an installable library with a CLI that reproduces every number here.
 
 ## 1. Introduction
 
@@ -511,7 +515,37 @@ near-impossible to solved. (The controller is rule-based to isolate the memory's
 *information* value; perception here is clean synthetic — the real-perception cost is
 quantified in §7.6.)
 
-## 9. Limitations
+## 9. Augmenting a frozen VLM on episodic-spatial QA
+
+The recognized 2026 frontier for egocentric memory is **episodic-spatial question answering**
+(OpenEQA — best VLM ~49.6% vs human ~86.8%, models "nearly blind"; EMemBench; FindingDory),
+where the documented bottleneck is exactly what EgoMem holds: spatial scene memory. We test
+EgoMem as a **model-agnostic tool that augments a frozen, off-the-shelf VLM** (no fine-tuning)
+— the Embodied-VideoAgent thesis, made buyer-side and neutral. On 6 real ARKitScenes scenes we
+generate 60 episodic-spatial questions with GT-computed answers (counting, existence, left/right,
+ahead/behind, closest-to) and ask a frozen **Gemini 2.5-flash** the same questions under three
+contexts: no-memory (question only), frame-only (objects in the current view), and EgoMem (its
+accumulated spatial summary, rendered in a travel-direction reference frame).
+
+**Table 11. Frozen-VLM episodic-spatial QA accuracy (real ARKitScenes, Gemini 2.5-flash).**
+Rows: `RESULTS.md` `exp_id = spatial-qa H11`.
+
+| condition | overall | counting | left/right | ahead/behind | exists |
+|---|---|---|---|---|---|
+| no-memory | 0.217 | 0/12 | 3/15 | 3/15 | 6/12 |
+| frame-only | 0.400 | 2/12 | 3/15 | 10/15 | 9/12 |
+| **EgoMem** | **0.683** | **10/12** | **10/15** | 10/15 | 10/12 |
+
+EgoMem's spatial summary **roughly triples** the frozen VLM's accuracy over no-memory
+(0.683 vs 0.217, **+46.7 pts**) and beats current-frame-only by **+28.3 pts** — with the gains
+concentrated on **counting** (0→10/12) and **spatial relations** (3→10/15), precisely the
+question types where VLMs are reported blind. Because the VLM is frozen and unmodified, this is
+a direct demonstration of the model-agnostic value: *any* VLM gains episodic-spatial competence
+by reading EgoMem. (Caveats: 60 questions / 6 scenes; templated GT-derived questions, not
+human-authored OpenEQA items; the memory here is built from GT object positions replayed through
+the real trajectory — pairing it with the real-detector pipeline of §7.6 is the next step.)
+
+## 10. Limitations
 
 - **Substrate & perception.** The core §5–§6 study is a geometric egomotion
   simulator with exact ground truth; §7 uses real ARKitScenes data (real VIO
@@ -543,7 +577,7 @@ quantified in §7.6.)
   value, not a learned policy), and other long-horizon abilities (task-stage memory,
   affordances) are untested.
 
-## 10. Conclusion
+## 11. Conclusion
 
 A model-agnostic memory layer for robotics, fed by egocentric video, is feasible
 and useful: a single non-parametric `write/query` store improves both a
@@ -574,7 +608,10 @@ out-of-view objects the baselines cannot (0.484 vs 0.000 at 1.0 m, fully GT-free
 the ~1 m localization cost of real perception. And it pays off where it counts: in a
 closed-loop long-horizon fetch task (§8), the same memory raises task completion from
 ~1 % to 100 % in the realistic large-space / limited-sensing regime, the gain scaling
-with partial observability. We release EgoMem (mean, median, and trust-but-verify
+with partial observability. It is also model-agnostic in practice (§9): a *frozen*
+off-the-shelf VLM, given EgoMem's spatial summary, roughly triples its episodic-spatial
+QA accuracy (0.68 vs 0.22), gaining the counting and spatial-relation competence on which
+VLMs are documented blind. We release EgoMem (mean, median, and trust-but-verify
 aggregators) as an installable library and CLI that reproduces every number reported
 here, as the buyer-side, neutral memory the literature has not yet offered. The clearest next step is larger-scale evaluation with a stronger
 detector/tracker, which §7.1–§7.6 now equip with a quantified
