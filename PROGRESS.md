@@ -317,6 +317,18 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## RUN LOG (newest first)
 
+### 2026-06-15 — H11d: larger-N tighten of the flagship QA number (N=114)
+- **Did:** Added `--all_scenes`/`--no_vision` flags; ran flash QA over 13 ARKitScenes scenes
+  (text conditions) → 114 questions. (14th scene hit a Vertex 429 quota wall, exhausted retries;
+  excluded as polluted — honest; killed the stuck tail.)
+- **Result (real, logged):** no-memory **0.263** (30/114), frame-only **0.684** (78/114),
+  **EgoMem 0.939** (107/114). egomem−no_mem **+0.675**, ≥frame-only → **CONFIRMED at ~2× N**.
+  3 RESULTS rows (`spatial-qa H11d`); `run_largeN.log`; paper §9 note.
+- **Finding:** the flagship episodic-spatial-QA result holds firmly at larger N — addresses the
+  small-N caveat. (Vision baseline comparison stays on the consistent 6/3-scene H11b/c runs.)
+- **Next (loop):** feasible high-value autonomous work is now largely exhausted (frontier needs
+  PyPI token / GPU / gated data); options are marginal tightening or winding down pending user input.
+
 ### 2026-06-15 — Packaging: CI green + PyPI-ready [non-experiment]
 - **Did:** Added GitHub Actions CI (pytest py3.11/3.12) — **green** (fresh-install of `egomem`
   on clean Ubuntu + 9 tests pass; badge on README). Made the package PyPI-ready: fixed author

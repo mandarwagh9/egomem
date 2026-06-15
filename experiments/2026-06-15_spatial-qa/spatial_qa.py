@@ -227,15 +227,18 @@ def main():
     ap.add_argument("--n_scenes", type=int, default=8)
     ap.add_argument("--model", default="gemini-2.5-flash")
     ap.add_argument("--smoke", action="store_true")
+    ap.add_argument("--all_scenes", action="store_true", help="don't restrict to RGB-only scenes")
+    ap.add_argument("--no_vision", action="store_true", help="skip the vision-frames condition")
     args = ap.parse_args()
 
     if args.smoke:
         print("smoke:", ask(args.model, "Reply with exactly: OK")); return
 
     dirs = sorted(d for d in glob.glob(os.path.join(args.scenes_dir, "*")) if os.path.isdir(d))
-    dirs = [d for d in dirs if glob.glob(os.path.join(d, f"{os.path.basename(d)}_frames", "lowres_wide", "*.png"))]
+    if not args.all_scenes:
+        dirs = [d for d in dirs if glob.glob(os.path.join(d, f"{os.path.basename(d)}_frames", "lowres_wide", "*.png"))]
     dirs = dirs[:args.n_scenes]
-    conds = ["no-memory", "frame-only", "egomem", "frames"]
+    conds = ["no-memory", "frame-only", "egomem"] + ([] if args.no_vision else ["frames"])
     tally = {c: dict(ok=0, n=0) for c in conds}
     by_type = {c: {} for c in conds}
     for sd in dirs:
@@ -284,13 +287,15 @@ def main():
         bts = " ".join(f"{t}:{v[0]}/{v[1]}" for t, v in sorted(by_type[c].items()))
         print(f"  {c:10s} acc={acc:.3f} ({tally[c]['ok']}/{n})  [{bts}]")
     acc = {c: tally[c]["ok"] / max(1, tally[c]["n"]) for c in conds}
-    eg, nm, fo, fr = acc["egomem"], acc["no-memory"], acc["frame-only"], acc["frames"]
-    print(f"\n  egomem - no-memory = {eg-nm:+.3f} | egomem - frame-only(text) = {eg-fo:+.3f} | "
-          f"egomem - frames(vision) = {eg-fr:+.3f}")
+    eg, nm, fo = acc["egomem"], acc["no-memory"], acc["frame-only"]
+    fr = acc.get("frames")
+    extra = f" | egomem - frames(vision) = {eg-fr:+.3f}" if fr is not None else ""
+    print(f"\n  egomem - no-memory = {eg-nm:+.3f} | egomem - frame-only(text) = {eg-fo:+.3f}{extra}")
     print(f"  H11 (egomem >= no-memory + 0.20 AND >= frame-only): "
           f"{'CONFIRMED' if (eg >= nm + 0.20 and eg >= fo) else 'REJECTED'}")
-    print(f"  H11b (egomem >= vision-frames + 0.10 -> structured memory beats raw VLM perception): "
-          f"{'CONFIRMED' if eg >= fr + 0.10 else 'REJECTED'}")
+    if fr is not None:
+        print(f"  H11b (egomem >= vision-frames + 0.10 -> structured memory beats raw VLM perception): "
+              f"{'CONFIRMED' if eg >= fr + 0.10 else 'REJECTED'}")
     here = os.path.dirname(os.path.abspath(__file__))
     json.dump(dict(model=args.model, conds={c: tally[c] for c in conds}, by_type=by_type),
               open(os.path.join(here, "metrics.json"), "w"), indent=2)

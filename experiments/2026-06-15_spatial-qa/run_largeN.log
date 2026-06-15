@@ -1,0 +1,47 @@
+
+[41069021] 18 objs, mem=18 frame=0 rgb=yes, 11 questions
+  API error: exhausted retries: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'R
+  API error: exhausted retries: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'R
+  running acc: {'no-memory': '2/11', 'frame-only': '4/11', 'egomem': '9/11'}
+
+[41069025] 20 objs, mem=20 frame=12 rgb=yes, 11 questions
+  running acc: {'no-memory': '4/22', 'frame-only': '11/22', 'egomem': '19/22'}
+
+[41069042] 6 objs, mem=6 frame=3 rgb=yes, 9 questions
+  running acc: {'no-memory': '7/31', 'frame-only': '18/31', 'egomem': '28/31'}
+
+[41069043] 6 objs, mem=6 frame=5 rgb=no, 9 questions
+  running acc: {'no-memory': '11/40', 'frame-only': '25/40', 'egomem': '36/40'}
+
+[41069046] 8 objs, mem=8 frame=4 rgb=yes, 9 questions
+  running acc: {'no-memory': '13/49', 'frame-only': '31/49', 'egomem': '44/49'}
+
+[41069048] 3 objs, mem=3 frame=3 rgb=no, 11 questions
+  running acc: {'no-memory': '17/60', 'frame-only': '41/60', 'egomem': '54/60'}
+
+[41069050] 3 objs, mem=3 frame=3 rgb=no, 11 questions
+  running acc: {'no-memory': '19/71', 'frame-only': '51/71', 'egomem': '64/71'}
+
+[41069051] 3 objs, mem=3 frame=0 rgb=no, 11 questions
+  running acc: {'no-memory': '21/82', 'frame-only': '57/82', 'egomem': '75/82'}
+
+[41125696] 16 objs, mem=16 frame=0 rgb=no, 9 questions
+  running acc: {'no-memory': '23/91', 'frame-only': '60/91', 'egomem': '84/91'}
+
+[41125709] 17 objs, mem=17 frame=17 rgb=yes, 11 questions
+  running acc: {'no-memory': '27/102', 'frame-only': '70/102', 'egomem': '95/102'}
+
+[41125718] 4 objs, mem=4 frame=4 rgb=yes, 4 questions
+  running acc: {'no-memory': '28/106', 'frame-only': '74/106', 'egomem': '99/106'}
+
+[41125722] 4 objs, mem=4 frame=3 rgb=no, 4 questions
+  running acc: {'no-memory': '29/110', 'frame-only': '77/110', 'egomem': '103/110'}
+
+[41125731] 4 objs, mem=4 frame=1 rgb=no, 4 questions
+  running acc: {'no-memory': '30/114', 'frame-only': '78/114', 'egomem': '107/114'}
+
+[41125756] 4 objs, mem=4 frame=0 rgb=no, 11 questions
+  API error: exhausted retries: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'R
+  API error: exhausted retries: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'R
+  API error: exhausted retries: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'R
+  API error: exhausted retries: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'R
