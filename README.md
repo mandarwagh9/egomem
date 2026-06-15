@@ -1,5 +1,7 @@
 # EgoMem
 
+[![ci](https://github.com/mandarwagh9/egomem/actions/workflows/ci.yml/badge.svg)](https://github.com/mandarwagh9/egomem/actions/workflows/ci.yml)
+
 **A model-agnostic memory layer for robotics from egocentric human video.** One
 neutral `write(obs) -> mem` / `query(state) -> retrieved_context` store that
 **both a world model and a VLA policy** can call — written once from egocentric
