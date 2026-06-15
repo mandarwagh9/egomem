@@ -317,6 +317,14 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## RUN LOG (newest first)
 
+### 2026-06-15 — Consolidated README around the H11b VLM result [non-experiment]
+- **Did:** Surfaced the strongest external-facing finding on the public README — added an
+  "EgoMem augments a *real, frozen* VLM (OpenEQA-style spatial QA)" section with the H11b table
+  (0.927 vs 0.491 vision vs 0.273 no-mem), refreshed the repo map (paper §6–§9, H1–H11, 5 memory
+  classes/9 tests, spatial-qa experiment), added the VLM-QA reproduce note. Committed + pushed.
+- **Next (loop):** a real OpenEQA slice for a literally-comparable number, OR a stronger-model /
+  larger-N QA confirmation, OR GPU-scale real-detector QA (deferred).
+
 ### 2026-06-15 — Explored no-oracle QA (real-detector memory) — detector-limited, scoped out
 - **Did:** Built `experiments/2026-06-15_spatial-qa/real_mem.py` to source the QA memory from
   the REAL detector+depth pipeline (H8/H9) instead of GT positions — the fully no-oracle path.

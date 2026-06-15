@@ -40,6 +40,26 @@ consumer), while the coarser VLA direction consumer survives. See the ablation i
 `paper/paper.md` §6. The current testbed is **synthetic** (no real human video
 yet) with oracle data association — real-clip validation is the next step.
 
+## EgoMem augments a *real, frozen* VLM (OpenEQA-style spatial QA)
+
+The recognized 2026 frontier is episodic-spatial QA, where VLMs are documented "nearly
+blind" (OpenEQA: best VLM ~0.50). EgoMem is model-agnostic in practice: hand its spatial
+summary to a **frozen, off-the-shelf Gemini 2.5-flash** (no fine-tuning) and its accuracy on
+real-ARKitScenes episodic-spatial questions jumps — **beating the same VLM that is actually
+shown egocentric photos of the room** (the true OpenEQA setting):
+
+| condition (frozen VLM) | spatial-QA accuracy |
+|---|---|
+| no-memory | 0.273 |
+| **VLM shown 5 egocentric photos** | 0.491 |
+| current-view object list (text) | 0.727 |
+| **+ EgoMem spatial summary** | **0.927** |
+
+**+43.6 points over the VLM that sees the room**, +65.5 over no-memory (6 scenes, 55 Qs);
+gains concentrate on counting (2/12 → 11/12) and spatial relations (4/13 → 13/13) — exactly
+where VLMs fail. Any VLM gains episodic-spatial competence by reading EgoMem. See
+`paper/paper.md` §9; rows in [`RESULTS.md`](RESULTS.md) (`exp_id = spatial-qa H11b`).
+
 ## Install & reproduce
 
 ```bash
@@ -59,18 +79,22 @@ for the protocol and `experiments/2026-06-13_arkit-oov/config.json` for the scen
 1.000 / 1.000 — identical to the committed experiment
 (`experiments/2026-06-13_oov-recall/stdout_lib_seed0.log`).
 
+**VLM spatial-QA run.** `experiments/2026-06-15_spatial-qa/spatial_qa.py` builds EgoMem over
+real ARKitScenes scenes and queries a frozen VLM under no-memory / vision-frames / EgoMem
+contexts. Needs a Gemini key (`GEMINI_API_KEY`) or Vertex ADC (`EGOMEM_VERTEX_PROJECT`).
+
 Use the layer directly (write once, query from any consumer): see `lib/README.md`.
 
 ## Repo map
 
 | Path | What |
 |---|---|
-| [`paper/paper.md`](paper/paper.md) | the paper: method, results, ablation, limitations |
+| [`paper/paper.md`](paper/paper.md) | the paper: method, results, ablations (§6 drift, §7 real data, §8 task success, §9 VLM-QA), limitations |
 | [`RESULTS.md`](RESULTS.md) | append-only experiment log — every reported number |
-| [`BIBLIOGRAPHY.md`](BIBLIOGRAPHY.md) | 7 verified sources with links |
-| [`research/`](research) | `landscape.md` (lit map), `hypothesis.md` (H1), `design.md` |
-| [`lib/`](lib) | the installable `egomem` package + CLI |
-| [`experiments/`](experiments) | raw logs, configs, metrics per run |
+| [`BIBLIOGRAPHY.md`](BIBLIOGRAPHY.md) | verified sources + 2026 SOTA refs (OpenEQA, MemoryVLA, …) |
+| [`research/`](research) | `landscape.md` (lit map) + falsifiable hypotheses H1–H11 + designs |
+| [`lib/`](lib) | the installable `egomem` package + CLI (5 memory classes, 9 tests) |
+| [`experiments/`](experiments) | raw logs, configs, metrics per run (synthetic, ARKitScenes, task, spatial-QA) |
 | [`PROGRESS.md`](PROGRESS.md) | the research-loop state and run log |
 
 ## How it works (one paragraph)
