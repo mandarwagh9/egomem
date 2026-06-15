@@ -317,6 +317,16 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## RUN LOG (newest first)
 
+### 2026-06-15 — Headline figure (paper Fig 1 + README) [non-experiment]
+- **Did:** Built `make_figure.py` (matplotlib, offline) → `paper/figures/qa_results.png`: grouped
+  bars of episodic-spatial QA accuracy by condition × model (flash + pro), EgoMem highlighted.
+  Embedded in README (top of the VLM section) and paper §9 as Figure 1. Numbers = logged H11b/c.
+- **Status:** This is the last clearly-valuable *offline* autonomous build. The project is now a
+  complete, polished, public artifact (11 cycles, lib+CI+PyPI-ready, paper §1–11 w/ figure,
+  flagship result validated across 2 VLMs + larger N + a headline figure). Further high-value
+  work needs external resources/decisions (PyPI token / GPU+hi-res / gated OpenEQA) or a new
+  research direction — flagged for the user.
+
 ### 2026-06-15 — H11d: larger-N tighten of the flagship QA number (N=114)
 - **Did:** Added `--all_scenes`/`--no_vision` flags; ran flash QA over 13 ARKitScenes scenes
   (text conditions) → 114 questions. (14th scene hit a Vertex 429 quota wall, exhausted retries;

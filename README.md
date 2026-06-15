@@ -44,6 +44,8 @@ yet) with oracle data association — real-clip validation is the next step.
 
 ## EgoMem augments a *real, frozen* VLM (OpenEQA-style spatial QA)
 
+![EgoMem augments a frozen VLM on episodic-spatial QA](paper/figures/qa_results.png)
+
 The recognized 2026 frontier is episodic-spatial QA, where VLMs are documented "nearly
 blind" (OpenEQA: best VLM ~0.50). EgoMem is model-agnostic in practice: hand its spatial
 summary to a **frozen, off-the-shelf Gemini 2.5-flash** (no fine-tuning) and its accuracy on

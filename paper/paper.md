@@ -529,6 +529,10 @@ the VLM is shown 5 sampled egocentric photos of the room; **frame-only** — a t
 currently-visible objects; and **EgoMem** — its accumulated spatial summary in a travel-direction
 reference frame.
 
+![Frozen-VLM episodic-spatial QA: EgoMem vs baselines, flash & pro](figures/qa_results.png)
+
+**Figure 1.** A frozen VLM gains spatial competence by reading EgoMem (data = Table 11 / H11c).
+
 **Table 11. Frozen-VLM episodic-spatial QA accuracy (real ARKitScenes, Gemini 2.5-flash, 6 RGB
 scenes / 55 Qs).** Rows: `RESULTS.md` `exp_id = spatial-qa H11b`.
 
