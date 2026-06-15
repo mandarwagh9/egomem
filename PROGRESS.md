@@ -317,6 +317,19 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## RUN LOG (newest first)
 
+### 2026-06-15 — Packaging: CI green + PyPI-ready [non-experiment]
+- **Did:** Added GitHub Actions CI (pytest py3.11/3.12) — **green** (fresh-install of `egomem`
+  on clean Ubuntu + 9 tests pass; badge on README). Made the package PyPI-ready: fixed author
+  (Mandar Wagh, not Black Robotics), added keywords/classifiers/urls; `python -m build` +
+  `twine check` both **PASS** (wheel + sdist). Publish note in lib/README. Committed + pushed.
+- **Blocked (needs user):** actual `twine upload` to PyPI requires a PyPI API token (interactive)
+  — left as a one-command step for the user.
+- **Status:** the autonomous loop has reached a strong, defensible completion for what's feasible
+  on this CPU+API setup. Remaining steps need external resources/decisions: PyPI token (publish),
+  GPU + higher-res frames (real-detector QA), gated datasets (literal OpenEQA), or a human call on
+  scope. Core artifact is complete: 11 cycles (H1–H11c), library (5 classes, 9 tests, CI green),
+  paper §1–11, public repo, flagship result (EgoMem beats real VLMs on episodic-spatial QA).
+
 ### 2026-06-15 — H11c: result holds with a STRONGER model (Gemini 2.5-pro)
 - **Did:** Confirmed OpenEQA-literal is infeasible here (episodes gated/large — ScanNet/HM3D;
   won't fake a number). Instead ran the QA with **Gemini 2.5-pro** (3 RGB scenes, 31 Qs) to test

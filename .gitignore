@@ -23,3 +23,9 @@ checkpoints/
 Thumbs.db
 .vscode/
 .idea/
+
+# build artifacts
+dist/
+build/
+lib/dist/
+lib/build/

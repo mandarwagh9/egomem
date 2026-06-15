@@ -28,6 +28,13 @@ Requires Python ≥3.10, numpy, torch (CPU is fine).
 pip install -e "lib[dev]" && pytest lib/tests     # 9 tests: geometry, API contract, all 5 arms
 ```
 
+## Build / publish (PyPI-ready)
+
+```bash
+cd lib && python -m build && twine check dist/*   # builds + validates the wheel/sdist (both PASS)
+twine upload dist/*                                # publish to PyPI (needs a PyPI API token)
+```
+
 ## Run
 
 ```bash
