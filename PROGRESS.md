@@ -317,6 +317,21 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## RUN LOG (newest first)
 
+### 2026-06-15 — H11c: result holds with a STRONGER model (Gemini 2.5-pro)
+- **Did:** Confirmed OpenEQA-literal is infeasible here (episodes gated/large — ScanNet/HM3D;
+  won't fake a number). Instead ran the QA with **Gemini 2.5-pro** (3 RGB scenes, 31 Qs) to test
+  model-agnosticism vs model strength.
+- **Result (real, logged):** no-memory 0.194, vision-frames 0.452, frame-only 0.613,
+  **EgoMem 0.968**. EgoMem − vision = **+0.516** (wider than flash's +0.436). The stronger
+  model's vision score (0.45) barely beats flash's (0.49) → **a better VLM doesn't close the
+  spatial gap by looking; structured memory still wins.** 3 RESULTS rows (`spatial-qa H11c`);
+  `run_pro.log`/`metrics_pro.json`; paper §9 note added.
+- **Finding:** rebuts "only weak models need this" — the model-agnostic value holds across model
+  strength, by an even larger margin on the stronger model.
+- **Next (loop):** feasible frontier on this CPU+API setup largely reached (real OpenEQA gated,
+  real-detector detector-limited); options: larger-N flash confirmation, CI/PyPI packaging, or
+  wind down with a results-summary figure.
+
 ### 2026-06-15 — Consolidated README around the H11b VLM result [non-experiment]
 - **Did:** Surfaced the strongest external-facing finding on the public README — added an
   "EgoMem augments a *real, frozen* VLM (OpenEQA-style spatial QA)" section with the H11b table

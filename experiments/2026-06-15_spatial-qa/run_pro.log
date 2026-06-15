@@ -1,0 +1,19 @@
+
+[41069021] 18 objs, mem=18 frame=0 rgb=yes, 11 questions
+  running acc: {'no-memory': '2/11', 'frame-only': '6/11', 'egomem': '11/11', 'frames': '6/11'}
+
+[41069025] 20 objs, mem=20 frame=12 rgb=yes, 11 questions
+  running acc: {'no-memory': '4/22', 'frame-only': '12/22', 'egomem': '21/22', 'frames': '10/22'}
+
+[41069042] 6 objs, mem=6 frame=3 rgb=yes, 9 questions
+  running acc: {'no-memory': '6/31', 'frame-only': '19/31', 'egomem': '30/31', 'frames': '14/31'}
+
+=== H11 episodic-spatial QA — accuracy by condition (real model: gemini-2.5-pro ) ===
+  no-memory  acc=0.194 (6/31)  [closest:0/3 count:0/6 exists:3/6 fb:1/8 lr:2/8]
+  frame-only acc=0.613 (19/31)  [closest:2/3 count:2/6 exists:5/6 fb:8/8 lr:2/8]
+  egomem     acc=0.968 (30/31)  [closest:2/3 count:6/6 exists:6/6 fb:8/8 lr:8/8]
+  frames     acc=0.452 (14/31)  [closest:0/3 count:2/6 exists:5/6 fb:2/8 lr:5/8]
+
+  egomem - no-memory = +0.774 | egomem - frame-only(text) = +0.355 | egomem - frames(vision) = +0.516
+  H11 (egomem >= no-memory + 0.20 AND >= frame-only): CONFIRMED
+  H11b (egomem >= vision-frames + 0.10 -> structured memory beats raw VLM perception): CONFIRMED

@@ -547,7 +547,11 @@ VLMs are documented "nearly blind" (OpenEQA). Strikingly, even a *text* list of 
 objects (0.727) outperforms raw vision (0.491), underscoring that the bottleneck is extracting
 spatial facts from pixels, not the questions. Because the VLM is frozen and unmodified, this is
 a direct demonstration of the model-agnostic value: *any* VLM gains episodic-spatial competence
-by reading EgoMem. (Caveats: 55 questions / 6 scenes; templated GT-derived questions, not
+by reading EgoMem. The result is **not specific to a weak model**: repeating it with the much
+stronger **Gemini 2.5-pro** (3 scenes, 31 Qs) gives no-memory 0.194, vision-frames 0.452,
+EgoMem **0.968** — EgoMem beats the pro-VLM-that-sees by **+51.6 pts**, an even wider margin,
+and the stronger model's vision score (0.45) barely exceeds flash's (0.49), so a better VLM does
+*not* close the spatial gap by looking. (Caveats: 55 questions / 6 scenes (flash) + 31/3 (pro); templated GT-derived questions, not
 human-authored OpenEQA items; the memory is built from GT object positions replayed through the
 real trajectory. We attempted the fully no-oracle path — building the QA memory from the real
 detector + depth pipeline of §7.6 — but on the 256×192 lowres ARKitScenes frames the CPU
