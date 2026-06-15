@@ -162,7 +162,7 @@ def score(ans, gold, qtype):
 
 import time
 _CLIENT = None
-def ask(model, prompt, max_retries=6):
+def _client():
     global _CLIENT
     if _CLIENT is None:
         from google import genai
@@ -172,10 +172,14 @@ def ask(model, prompt, max_retries=6):
                                    location=os.environ.get("EGOMEM_VERTEX_LOCATION", "us-central1"))
         else:
             _CLIENT = genai.Client(api_key=key)
+    return _CLIENT
+
+
+def _gen(model, contents, max_retries=6):
     last = ""
     for attempt in range(max_retries):
         try:
-            r = _CLIENT.models.generate_content(model=model, contents=prompt)
+            r = _client().models.generate_content(model=model, contents=contents)
             time.sleep(0.6)                              # gentle pacing to avoid 429
             return (r.text or "").strip()
         except Exception as e:
@@ -187,6 +191,16 @@ def ask(model, prompt, max_retries=6):
     raise RuntimeError(f"exhausted retries: {last[:120]}")
 
 
+def ask(model, prompt):
+    return _gen(model, prompt)
+
+
+def ask_vision(model, text, image_paths):
+    from google.genai import types
+    parts = [types.Part.from_bytes(data=open(p, "rb").read(), mime_type="image/png") for p in image_paths]
+    return _gen(model, [text] + parts)
+
+
 PREAMBLE = ("You are an embodied agent that explored an indoor room. Answer the question "
             "concisely in the exact format requested. ")
 CTX = {
@@ -194,7 +208,17 @@ CTX = {
     "frame-only": "What you can currently see in front of you:\n{ctx}",
     "egomem": "Your spatial memory of the room (objects you saw while exploring, relative to "
               "where you are now):\n{ctx}",
+    "frames": "Here are several photos you took while exploring this room, in temporal order. "
+              "Study them to answer.",
 }
+
+
+def sample_frames(scene_dir, vid, k=5):
+    fs = sorted(glob.glob(os.path.join(scene_dir, f"{vid}_frames", "lowres_wide", "*.png")))
+    if not fs:
+        return None
+    idx = np.linspace(0, len(fs) - 1, min(k, len(fs))).astype(int)
+    return [fs[i] for i in idx]
 
 
 def main():
@@ -208,8 +232,10 @@ def main():
     if args.smoke:
         print("smoke:", ask(args.model, "Reply with exactly: OK")); return
 
-    dirs = sorted(d for d in glob.glob(os.path.join(args.scenes_dir, "*")) if os.path.isdir(d))[:args.n_scenes]
-    conds = ["no-memory", "frame-only", "egomem"]
+    dirs = sorted(d for d in glob.glob(os.path.join(args.scenes_dir, "*")) if os.path.isdir(d))
+    dirs = [d for d in dirs if glob.glob(os.path.join(d, f"{os.path.basename(d)}_frames", "lowres_wide", "*.png"))]
+    dirs = dirs[:args.n_scenes]
+    conds = ["no-memory", "frame-only", "egomem", "frames"]
     tally = {c: dict(ok=0, n=0) for c in conds}
     by_type = {c: {} for c in conds}
     for sd in dirs:
@@ -229,15 +255,23 @@ def main():
         fo_idxs = frame_only_idxs(objs, final, fwd, left)
         ctx_txt = {"no-memory": "", "frame-only": render_objs(fo_idxs, objs, {}, final, fwd, left),
                    "egomem": render_objs(mem_idxs, objs, est, final, fwd, left)}
+        frames = sample_frames(sd, vid, k=5)
         qs = gen_questions(objs, final, fwd, left, rng)
-        print(f"\n[{vid}] {len(objs)} objs, mem={len(mem_idxs)} frame={len(fo_idxs)}, {len(qs)} questions")
+        print(f"\n[{vid}] {len(objs)} objs, mem={len(mem_idxs)} frame={len(fo_idxs)} "
+              f"rgb={'yes' if frames else 'no'}, {len(qs)} questions")
         for q in qs:
             for c in conds:
-                prompt = PREAMBLE + CTX[c].format(ctx=ctx_txt[c]) + "\n\nQuestion: " + q["q"]
                 try:
-                    ans = ask(args.model, prompt)
+                    if c == "frames":
+                        if not frames:
+                            continue            # no RGB for this scene -> don't tally
+                        text = PREAMBLE + CTX["frames"] + "\n\nQuestion: " + q["q"]
+                        ans = ask_vision(args.model, text, frames)
+                    else:
+                        prompt = PREAMBLE + CTX[c].format(ctx=ctx_txt[c]) + "\n\nQuestion: " + q["q"]
+                        ans = ask(args.model, prompt)
                 except Exception as e:
-                    print("  API error:", e); ans = ""
+                    print("  API error:", str(e)[:80]); ans = ""
                 ok = score(ans, q["gold"], q["type"])
                 tally[c]["ok"] += ok; tally[c]["n"] += 1
                 bt = by_type[c].setdefault(q["type"], [0, 0]); bt[0] += ok; bt[1] += 1
@@ -249,12 +283,14 @@ def main():
         n = tally[c]["n"]; acc = tally[c]["ok"] / n if n else 0
         bts = " ".join(f"{t}:{v[0]}/{v[1]}" for t, v in sorted(by_type[c].items()))
         print(f"  {c:10s} acc={acc:.3f} ({tally[c]['ok']}/{n})  [{bts}]")
-    eg = tally["egomem"]["ok"] / max(1, tally["egomem"]["n"])
-    nm = tally["no-memory"]["ok"] / max(1, tally["no-memory"]["n"])
-    fo = tally["frame-only"]["ok"] / max(1, tally["frame-only"]["n"])
-    print(f"\n  egomem - no-memory = {eg-nm:+.3f} | egomem - frame-only = {eg-fo:+.3f}")
+    acc = {c: tally[c]["ok"] / max(1, tally[c]["n"]) for c in conds}
+    eg, nm, fo, fr = acc["egomem"], acc["no-memory"], acc["frame-only"], acc["frames"]
+    print(f"\n  egomem - no-memory = {eg-nm:+.3f} | egomem - frame-only(text) = {eg-fo:+.3f} | "
+          f"egomem - frames(vision) = {eg-fr:+.3f}")
     print(f"  H11 (egomem >= no-memory + 0.20 AND >= frame-only): "
           f"{'CONFIRMED' if (eg >= nm + 0.20 and eg >= fo) else 'REJECTED'}")
+    print(f"  H11b (egomem >= vision-frames + 0.10 -> structured memory beats raw VLM perception): "
+          f"{'CONFIRMED' if eg >= fr + 0.10 else 'REJECTED'}")
     here = os.path.dirname(os.path.abspath(__file__))
     json.dump(dict(model=args.model, conds={c: tally[c] for c in conds}, by_type=by_type),
               open(os.path.join(here, "metrics.json"), "w"), indent=2)

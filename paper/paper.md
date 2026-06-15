@@ -51,10 +51,10 @@ Crucially, this recall converts to **task success**: in a closed-loop long-horiz
 fetch task, the same memory lifts completion from ~1 % to 100 % (+99 points) in the
 realistic large-space, limited-sensing regime, with the gain scaling with partial
 observability. Finally, EgoMem is **model-agnostic in practice**: giving its spatial
-summary to a *frozen, off-the-shelf VLM* (Gemini 2.5-flash) roughly **triples** its
-accuracy on episodic-spatial QA (0.68 vs 0.22 no-memory; +0.28 over current-frame-only),
-with gains concentrated on counting and spatial relations — the OpenEQA-style tasks where
-VLMs are "nearly blind". We release the layer (mean / median / trust-but-verify
+summary to a *frozen, off-the-shelf VLM* (Gemini 2.5-flash) raises its episodic-spatial QA
+accuracy to **0.93**, beating the same VLM *shown egocentric photos of the room* (the true
+OpenEQA setting) by **+44 points** (0.93 vs 0.49) and no-memory by +66, with gains
+concentrated on counting and spatial relations — the tasks where VLMs are "nearly blind". We release the layer (mean / median / trust-but-verify
 aggregators) as an installable library with a CLI that reproduces every number here.
 
 ## 1. Introduction
@@ -522,28 +522,34 @@ The recognized 2026 frontier for egocentric memory is **episodic-spatial questio
 where the documented bottleneck is exactly what EgoMem holds: spatial scene memory. We test
 EgoMem as a **model-agnostic tool that augments a frozen, off-the-shelf VLM** (no fine-tuning)
 — the Embodied-VideoAgent thesis, made buyer-side and neutral. On 6 real ARKitScenes scenes we
-generate 60 episodic-spatial questions with GT-computed answers (counting, existence, left/right,
-ahead/behind, closest-to) and ask a frozen **Gemini 2.5-flash** the same questions under three
-contexts: no-memory (question only), frame-only (objects in the current view), and EgoMem (its
-accumulated spatial summary, rendered in a travel-direction reference frame).
+generate 55 episodic-spatial questions with GT-computed answers (counting, existence, left/right,
+ahead/behind, closest-to) and ask a frozen **Gemini 2.5-flash** the same questions under four
+contexts: **no-memory** (question only); **vision-frames** — the *true OpenEQA setting*, where
+the VLM is shown 5 sampled egocentric photos of the room; **frame-only** — a text list of
+currently-visible objects; and **EgoMem** — its accumulated spatial summary in a travel-direction
+reference frame.
 
-**Table 11. Frozen-VLM episodic-spatial QA accuracy (real ARKitScenes, Gemini 2.5-flash).**
-Rows: `RESULTS.md` `exp_id = spatial-qa H11`.
+**Table 11. Frozen-VLM episodic-spatial QA accuracy (real ARKitScenes, Gemini 2.5-flash, 6 RGB
+scenes / 55 Qs).** Rows: `RESULTS.md` `exp_id = spatial-qa H11b`.
 
 | condition | overall | counting | left/right | ahead/behind | exists |
 |---|---|---|---|---|---|
-| no-memory | 0.217 | 0/12 | 3/15 | 3/15 | 6/12 |
-| frame-only | 0.400 | 2/12 | 3/15 | 10/15 | 9/12 |
-| **EgoMem** | **0.683** | **10/12** | **10/15** | 10/15 | 10/12 |
+| no-memory | 0.273 | 0/12 | 5/13 | 4/13 | 6/12 |
+| **vision-frames** (VLM *sees* 5 photos) | 0.491 | 2/12 | 9/13 | 4/13 | 11/12 |
+| frame-only (text, current view) | 0.727 | 5/12 | 10/13 | 12/13 | 11/12 |
+| **EgoMem** | **0.927** | **11/12** | **13/13** | **13/13** | 12/12 |
 
-EgoMem's spatial summary **roughly triples** the frozen VLM's accuracy over no-memory
-(0.683 vs 0.217, **+46.7 pts**) and beats current-frame-only by **+28.3 pts** — with the gains
-concentrated on **counting** (0→10/12) and **spatial relations** (3→10/15), precisely the
-question types where VLMs are reported blind. Because the VLM is frozen and unmodified, this is
+The headline is the comparison against the **vision baseline**: EgoMem's structured spatial
+summary beats a VLM that *actually sees* egocentric photos of the room by **+43.6 points**
+(0.927 vs 0.491), and beats no-memory by **+65.5**. The gains are concentrated on **counting**
+(2/12 → 11/12) and **ahead/behind relations** (4/13 → 13/13) — exactly the question types where
+VLMs are documented "nearly blind" (OpenEQA). Strikingly, even a *text* list of currently-visible
+objects (0.727) outperforms raw vision (0.491), underscoring that the bottleneck is extracting
+spatial facts from pixels, not the questions. Because the VLM is frozen and unmodified, this is
 a direct demonstration of the model-agnostic value: *any* VLM gains episodic-spatial competence
-by reading EgoMem. (Caveats: 60 questions / 6 scenes; templated GT-derived questions, not
-human-authored OpenEQA items; the memory here is built from GT object positions replayed through
-the real trajectory — pairing it with the real-detector pipeline of §7.6 is the next step.)
+by reading EgoMem. (Caveats: 55 questions / 6 scenes; templated GT-derived questions, not
+human-authored OpenEQA items; the memory is built from GT object positions replayed through the
+real trajectory — pairing it with the real-detector pipeline of §7.6 is the next step.)
 
 ## 10. Limitations
 
@@ -609,9 +615,9 @@ the ~1 m localization cost of real perception. And it pays off where it counts: 
 closed-loop long-horizon fetch task (§8), the same memory raises task completion from
 ~1 % to 100 % in the realistic large-space / limited-sensing regime, the gain scaling
 with partial observability. It is also model-agnostic in practice (§9): a *frozen*
-off-the-shelf VLM, given EgoMem's spatial summary, roughly triples its episodic-spatial
-QA accuracy (0.68 vs 0.22), gaining the counting and spatial-relation competence on which
-VLMs are documented blind. We release EgoMem (mean, median, and trust-but-verify
+off-the-shelf VLM, given EgoMem's spatial summary, reaches 0.93 on episodic-spatial QA —
+beating the same VLM *shown egocentric photos* of the room by +44 points (0.93 vs 0.49) —
+gaining the counting and spatial-relation competence on which VLMs are documented blind. We release EgoMem (mean, median, and trust-but-verify
 aggregators) as an installable library and CLI that reproduces every number reported
 here, as the buyer-side, neutral memory the literature has not yet offered. The clearest next step is larger-scale evaluation with a stronger
 detector/tracker, which §7.1–§7.6 now equip with a quantified

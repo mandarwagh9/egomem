@@ -71,3 +71,22 @@ human-authored like OpenEQA); EgoMem is built from GT object positions replayed 
 real trajectory (not a real detector — that pipeline is §7.6/H8-H9). Vertex 429 rate limits
 required exp-backoff. Next: scale N, add real-detector memory (combine with H8-H9), add a
 vision-frame VLM baseline (images, true OpenEQA setting).
+
+## H11b (2026-06-15): the true OpenEQA setting — EgoMem vs a VLM that SEES the room
+
+Added a **vision-frames** condition: the frozen VLM is shown 5 sampled egocentric photos of
+the room (the actual OpenEQA setting), vs EgoMem's text spatial summary. 6 RGB ARKitScenes
+scenes, 55 Qs, Gemini 2.5-flash:
+
+| condition | overall | count | lr | fb | exists |
+|---|---|---|---|---|---|
+| no-memory | 0.273 | 0/12 | 5/13 | 4/13 | 6/12 |
+| vision-frames (VLM sees 5 photos) | 0.491 | 2/12 | 9/13 | 4/13 | 11/12 |
+| frame-only (text current view) | 0.727 | 5/12 | 10/13 | 12/13 | 11/12 |
+| **EgoMem** | **0.927** | 11/12 | 13/13 | 13/13 | 12/12 |
+
+**EgoMem beats the VLM-that-sees-the-room by +43.6 pts (0.927 vs 0.491)** and no-memory by
++65.5 — gains on counting (2→11/12) and ahead/behind (4→13/13). Even a *text* list of current
+objects (0.727) beats raw vision (0.491): the bottleneck is reading spatial facts from pixels.
+**H11b CONFIRMED** (egomem ≥ vision-frames + 0.10, by a wide margin). This is the rigorous,
+recognized-benchmark-style result: structured spatial memory > raw VLM perception, model-agnostic.

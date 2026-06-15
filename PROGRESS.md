@@ -317,6 +317,21 @@ Phase 5 EXIT: a fresh clone can install and the demo runs.
 
 ## RUN LOG (newest first)
 
+### 2026-06-15 — Cycle 11 / H11b: EgoMem beats a VLM that SEES the room (true OpenEQA setting)
+- **Did (autonomous /loop):** Added a **vision-frames** condition to `spatial_qa.py` — the
+  frozen VLM is shown 5 sampled egocentric photos (the actual OpenEQA setting), vs EgoMem's
+  text summary; restricted to the 6 RGB-available ARKitScenes scenes for a clean head-to-head.
+  55 Qs, Gemini 2.5-flash via Vertex, backoff.
+- **Result (real, logged):** no-memory 0.273, **vision-frames 0.491**, frame-only(text) 0.727,
+  **EgoMem 0.927**. **EgoMem − vision = +0.436**, −no-mem = +0.655. Gains on counting (2→11/12)
+  and ahead/behind (4→13/13). Even text-current-view (0.727) > raw vision (0.491). 4 RESULTS
+  rows (`spatial-qa H11b`); `stdout_qa_frames.log`; paper §9 Table 11 updated + abstract/concl.
+- **Finding:** the rigorous, recognized-benchmark-style result — **structured spatial memory
+  beats raw VLM perception** on episodic-spatial QA, model-agnostic. Strongest external-facing
+  result so far. 11 cycles (H11+H11b).
+- **Next (loop):** combine real-detector memory (H8-H9) with the QA pipeline (fully-real OpenEQA
+  analog); scale scenes; or download a real OpenEQA slice for a literally-comparable number.
+
 ### 2026-06-15 — Cycle 11 / H11: EgoMem augments a FROZEN VLM on episodic-spatial QA — CONFIRMED
 - **Did (autonomous /loop):** Researched 2026 SOTA frontier (OpenEQA/EMemBench/FindingDory/
   MemoryVLA — episodic-spatial memory, VLMs "nearly blind"). Built
